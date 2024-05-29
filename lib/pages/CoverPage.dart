@@ -32,7 +32,7 @@ class CoverPage extends StatelessWidget {
           ),
           InkWell(
             onTap: () {
-              Navigator.pushReplacementNamed(context, "HomePage");
+              Navigator.pushReplacementNamed(context, "startingpage");
             },
             child: Ink(
               padding: EdgeInsets.symmetric(horizontal: 80, vertical: 16),
