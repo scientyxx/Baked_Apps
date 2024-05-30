@@ -6,51 +6,44 @@ class CoverPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color.fromRGBO(254, 210, 119, 5),
       body: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            "images/logo.png",
-            height: 300,
-          ),
-          // Container(
-          //   margin: EdgeInsets.only(top: 50),
-          //   child: Text(
-          //     "Buy Baked",
-          //     style: TextStyle(
-          //       color: Colors.black,
-          //       fontSize: 35,
-          //       fontWeight: FontWeight.w300,
-          //     ),
-          //   ),
-          // ),
-          Container(
-            margin: EdgeInsets.only(top: 50),
-            child: SizedBox(
-              height: 50,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              "images/logo.png",
+              height: MediaQuery.of(context).size.height * 0.5,
             ),
-          ),
-          InkWell(
-            onTap: () {
-              Navigator.pushReplacementNamed(context, "startingpage");
-            },
-            child: Ink(
-              padding: EdgeInsets.symmetric(horizontal: 80, vertical: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                color: Color.fromRGBO(195, 90, 45, 10),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, "startingpage");
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color.fromRGBO(195, 90, 45, 10),
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width * 0.3,
+                  vertical: MediaQuery.of(context).size.height * 0.025,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               child: Text(
-                "Get Startted",
+                "Get Started",
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.white,
+                  fontSize: MediaQuery.of(context).size.width * 0.05,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          )
-        ],
-      )),
+          ],
+        ),
+      ),
     );
   }
+}
+
+void main() {
+  runApp(CoverPage());
 }

@@ -6,7 +6,7 @@ class StartingPage extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(50),
+          preferredSize: Size.fromHeight(80),
           child: AppBar(
             centerTitle: true,
             title: Image.asset(
@@ -21,14 +21,14 @@ class StartingPage extends StatelessWidget {
             children: [
               Image.asset(
                 "images/25.png",
-                height: 320,
+                height: MediaQuery.of(context).size.height * 0.5,
               ),
               Text(
                 "Home Of All Your\nFavorite Pastries!",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Baloo Chettan',
-                  fontSize: 18,
+                  fontSize: MediaQuery.of(context).size.width * 0.05,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -38,7 +38,7 @@ class StartingPage extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Roboto',
-                  fontSize: 13,
+                  fontSize: MediaQuery.of(context).size.width * 0.03,
                   color: Color.fromRGBO(172, 179, 191, 1),
                 ),
               ),
@@ -48,8 +48,8 @@ class StartingPage extends StatelessWidget {
                   Navigator.pushReplacementNamed(context, "continuepage");
                 },
                 child: Container(
-                  width: 300,
-                  height: 50,
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.06,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                     color: Colors.white,
@@ -60,7 +60,7 @@ class StartingPage extends StatelessWidget {
                       "CONTINUE",
                       style: TextStyle(
                         color: Colors.black,
-                        fontSize: 18,
+                        fontSize: MediaQuery.of(context).size.width * 0.04,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -70,11 +70,11 @@ class StartingPage extends StatelessWidget {
               SizedBox(height: 20),
               InkWell(
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, "startingpage");
+                  Navigator.pushReplacementNamed(context, "loginpage");
                 },
                 child: Container(
-                  width: 300,
-                  height: 50,
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.06,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                     color: Color.fromRGBO(195, 90, 45, 10),
@@ -86,7 +86,7 @@ class StartingPage extends StatelessWidget {
                       "SIGN IN",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: MediaQuery.of(context).size.width * 0.04,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
