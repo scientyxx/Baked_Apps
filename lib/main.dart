@@ -1,3 +1,4 @@
+import 'package:baked/pages/ContinuePage.dart';
 import 'package:baked/pages/CoverPage.dart';
 import 'package:flutter/material.dart';
 import 'package:baked/pages/HomePage.dart';
@@ -15,6 +16,7 @@ class MyApp extends StatelessWidget {
       routes: {
         "/": (context) => CoverPage(),
         "startingpage": (context) => StartingPage(),
+        "continuepage": (context)=> ContinuePage(),
       },
     );
   }
