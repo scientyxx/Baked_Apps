@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class StartingPage extends StatelessWidget {
+class ContinuePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,11 +20,11 @@ class StartingPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Image.asset(
-                "images/25.png",
+                "images/27.png",
                 height: 320,
               ),
               Text(
-                "Home Of All Your\nFavorite Pastries!",
+                "Smooth Payments,\nSweet Treats!",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Baloo Chettan',
@@ -34,7 +34,7 @@ class StartingPage extends StatelessWidget {
               ),
               SizedBox(height: 20),
               Text(
-                "Where Every Bite Is A Heavenly Delight,\nFelight In Every Flavor Symphony.",
+                "Indulge Yourself in Luxurious Treats \nwith Effortless Payment.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Roboto',
@@ -45,7 +45,7 @@ class StartingPage extends StatelessWidget {
               SizedBox(height: 50),
               InkWell(
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, "continuepage");
+                  Navigator.pushReplacementNamed(context, "startingpage");
                 },
                 child: Container(
                   width: 300,
@@ -57,7 +57,7 @@ class StartingPage extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      "CONTINUE",
+                      "REGISTER",
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 18,
@@ -102,5 +102,5 @@ class StartingPage extends StatelessWidget {
 }
 
 void main() {
-  runApp(StartingPage());
+  runApp(ContinuePage());
 }
