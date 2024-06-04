@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
         "registerpage": (context) => RegisterPage(),
         "register2page": (context) => Register2Page(),
       },
+      debugShowMaterialGrid: false,
     );
   }
 }
