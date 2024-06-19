@@ -1,0 +1,396 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:baked/widgets/MenuListWidget.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Your App',
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+        textTheme: TextTheme(
+            // Atur gaya teks sesuai dengan kebutuhan Anda
+            ),
+      ),
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+
+  // List of widgets corresponding to each tab
+  final List<Widget> _tabs = [
+    HomePageContent(), // Placeholder for Home page content
+    MenuListWidget(), // Placeholder for Menu page content
+    Container(
+      color: Colors.blueGrey,
+      child: Center(
+        child: Text(
+          'Order',
+          style: TextStyle(fontSize: 30, color: Colors.white),
+        ),
+      ),
+    ),
+    Container(
+      color: Colors.teal,
+      child: Center(
+        child: Text(
+          'Profile',
+          style: TextStyle(fontSize: 30, color: Colors.white),
+        ),
+      ),
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: _tabs[_currentIndex],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant_menu),
+            label: 'Menu',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Order',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        unselectedItemColor: Color(0xFF50555C),
+        selectedItemColor: Color(0xFFC35A2E),
+        unselectedLabelStyle: TextStyle(color: Color(0xFF50555C)),
+        selectedLabelStyle: TextStyle(color: Color(0xFFC35A2E)),
+      ),
+    );
+  }
+}
+
+class HomePageContent extends StatelessWidget {
+  final List<FoodItem> foodItems = [
+    FoodItem(
+      name: "Quiche Lorraine",
+      imagePath: "images/1.png",
+      price: 40000,
+    ),
+    FoodItem(
+      name: "Croissant Sandwich",
+      imagePath: "images/2.png",
+      price: 50000,
+    ),
+    FoodItem(
+      name: "Danish Pastry",
+      imagePath: "images/3.png",
+      price: 45000,
+    ),
+    FoodItem(
+      name: "Cinnamon Roll",
+      imagePath: "images/4.png",
+      price: 35000,
+    ),
+    FoodItem(
+      name: "Chocolate Cake",
+      imagePath: "images/5.png",
+      price: 55000,
+    ),
+    FoodItem(
+      name: "Blueberry Muffin",
+      imagePath: "images/6.png",
+      price: 30000,
+    ),
+    FoodItem(
+      name: "Baguette",
+      imagePath: "images/7.png",
+      price: 15000,
+    ),
+    FoodItem(
+      name: "Cheesecake",
+      imagePath: "images/8.png",
+      price: 48000,
+    ),
+  ];
+
+  String formatCurrency(double amount) {
+    try {
+      final formatCurrency =
+          NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
+      return formatCurrency.format(amount);
+    } catch (e) {
+      print('Error formatting currency: $e');
+      return 'Rp 0';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  "images/logo.png",
+                  height: 100,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Welcome",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "What do you want to buy?",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.all(16),
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            height: 50,
+            decoration: BoxDecoration(
+              color: Color(0xFFEDE9E9),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search),
+                SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: "Search here...",
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                Icon(Icons.filter_list),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PopularItemsWidget(),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Menu List",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // Navigasi ke halaman MenuListWidget jika diperlukan
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MenuListWidget(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "See More",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                // Tampilan 8 item menu seperti di MenuListWidget
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: foodItems.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemBuilder: (context, index) {
+                    return MenuItemWidget(
+                      foodItem: foodItems[index],
+                      formatCurrency: formatCurrency,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MenuItemWidget extends StatefulWidget {
+  final FoodItem foodItem;
+  final String Function(double) formatCurrency;
+
+  MenuItemWidget({required this.foodItem, required this.formatCurrency});
+
+  @override
+  _MenuItemWidgetState createState() => _MenuItemWidgetState();
+}
+
+class _MenuItemWidgetState extends State<MenuItemWidget> {
+  int quantity = 0;
+
+  void _incrementQuantity() {
+    setState(() {
+      quantity++;
+    });
+  }
+
+  void _decrementQuantity() {
+    if (quantity > 0) {
+      setState(() {
+        quantity--;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              child: Image.asset(
+                widget.foodItem.imagePath,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.foodItem.name,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 4),
+                Text(
+                  widget.formatCurrency(widget.foodItem.price),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.remove),
+                  onPressed: _decrementQuantity,
+                  color: Theme.of(context).primaryColor,
+                ),
+                Text(
+                  quantity.toString(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: _incrementQuantity,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FoodItem {
+  final String name;
+  final String imagePath;
+  final double price;
+
+  FoodItem({
+    required this.name,
+    required this.imagePath,
+    required this.price,
+  });
+}
