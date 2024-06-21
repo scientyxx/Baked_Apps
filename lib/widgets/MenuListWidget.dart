@@ -1,6 +1,8 @@
+import 'package:baked/models/order.dart';
+import 'package:baked/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:baked/widgets/MenuListWidget.dart';
+import 'package:provider/provider.dart';
 
 class MenuListWidget extends StatefulWidget {
   @override
@@ -49,44 +51,7 @@ class _MenuListWidgetState extends State<MenuListWidget> {
       imagePath: "images/8.png",
       price: 48000,
     ),
-    FoodItem(
-      name: "Blueberry Muffin",
-      imagePath: "images/9.png",
-      price: 30000,
-    ),
-    FoodItem(
-      name: "Baguette",
-      imagePath: "images/10.png",
-      price: 15000,
-    ),
-    FoodItem(
-      name: "Cheesecake",
-      imagePath: "images/11.png",
-      price: 48000,
-    ),
-    FoodItem(
-      name: "Blueberry Muffin",
-      imagePath: "images/12.png",
-      price: 30000,
-    ),
-    FoodItem(
-      name: "Baguette",
-      imagePath: "images/13.png",
-      price: 15000,
-    ),
-    FoodItem(
-      name: "Cheesecake",
-      imagePath: "images/14.png",
-      price: 48000,
-    ),
-    FoodItem(
-      name: "Cheesecake",
-      imagePath: "images/15.png",
-      price: 48000,
-    ),
   ];
-
-  Map<String, int> _cartItems = {};
 
   String formatCurrency(double amount) {
     try {
@@ -101,13 +66,12 @@ class _MenuListWidgetState extends State<MenuListWidget> {
 
   void addToCart(FoodItem foodItem, int quantity) {
     if (quantity > 0) {
-      setState(() {
-        if (_cartItems.containsKey(foodItem.name)) {
-          _cartItems[foodItem.name] = _cartItems[foodItem.name]! + quantity;
-        } else {
-          _cartItems[foodItem.name] = quantity;
-        }
-      });
+      Order order = Order(
+        name: foodItem.name,
+        price: foodItem.price.toDouble(),
+        quantity: quantity,
+      );
+      Provider.of<OrderProvider>(context, listen: false).addOrder(order);
     }
   }
 

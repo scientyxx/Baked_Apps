@@ -1,9 +1,29 @@
-import 'package:baked/widgets/CategoriesWidget.dart';
-import 'package:baked/widgets/PopularItemsWidget.dart';
-import 'package:baked/widgets/MenuHomeWidget.dart';
+import 'package:baked/pages/OrderPage.dart';
 import 'package:baked/widgets/MenuListWidget.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+class MenuPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Menu'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => OrderPage()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: MenuPageContent(),
+    );
+  }
+}
 
 class MenuPageContent extends StatelessWidget {
   @override
@@ -16,11 +36,9 @@ class MenuPageContent extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Center(
-                  child: Image.asset(
-                    "images/logo.png",
-                    height: 100,
-                  ),
+                Image.asset(
+                  "images/logo.png",
+                  height: 100,
                 ),
               ],
             ),
@@ -36,8 +54,7 @@ class MenuPageContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // CategoriesWidget(),
-                MenuListWidget()
+                MenuListWidget(),
               ],
             ),
           ),
