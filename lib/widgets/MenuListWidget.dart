@@ -5,6 +5,10 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class MenuListWidget extends StatefulWidget {
+  final int limit;
+
+  MenuListWidget({this.limit = 8}); // Default to 4 if no limit is provided
+
   @override
   _MenuListWidgetState createState() => _MenuListWidgetState();
 }
@@ -64,19 +68,27 @@ class _MenuListWidgetState extends State<MenuListWidget> {
     }
   }
 
-  void addToCart(FoodItem foodItem, int quantity) {
-    if (quantity > 0) {
+  void updateCart(FoodItem foodItem, int quantity) {
+    if (quantity != 0) {
       Order order = Order(
         name: foodItem.name,
         price: foodItem.price.toDouble(),
         quantity: quantity,
+        imagePath: foodItem.imagePath, // Use correct imagePath
       );
-      Provider.of<OrderProvider>(context, listen: false).addOrder(order);
+      if (quantity > 0) {
+        Provider.of<OrderProvider>(context, listen: false).addOrder(order);
+      } else {
+        Provider.of<OrderProvider>(context, listen: false).removeOrder(order);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    int displayLimit = widget.limit;
+    List<FoodItem> limitedFoodItems = foodItems.take(displayLimit).toList();
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -87,7 +99,7 @@ class _MenuListWidgetState extends State<MenuListWidget> {
             GridView.builder(
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
-              itemCount: foodItems.length,
+              itemCount: limitedFoodItems.length, // Use limitedFoodItems.length
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
@@ -96,9 +108,9 @@ class _MenuListWidgetState extends State<MenuListWidget> {
               ),
               itemBuilder: (context, index) {
                 return MenuItemWidget(
-                  foodItem: foodItems[index],
+                  foodItem: limitedFoodItems[index], // Use limitedFoodItems
                   formatCurrency: formatCurrency,
-                  addToCart: addToCart,
+                  updateCart: updateCart,
                 );
               },
             ),
@@ -112,12 +124,12 @@ class _MenuListWidgetState extends State<MenuListWidget> {
 class MenuItemWidget extends StatefulWidget {
   final FoodItem foodItem;
   final String Function(double) formatCurrency;
-  final void Function(FoodItem, int) addToCart;
+  final void Function(FoodItem, int) updateCart;
 
   MenuItemWidget({
     required this.foodItem,
     required this.formatCurrency,
-    required this.addToCart,
+    required this.updateCart,
   });
 
   @override
@@ -127,20 +139,55 @@ class MenuItemWidget extends StatefulWidget {
 class _MenuItemWidgetState extends State<MenuItemWidget> {
   int quantity = 0;
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    quantity = Provider.of<OrderProvider>(context, listen: false)
+        .getOrderQuantity(widget.foodItem.name);
+  }
+
   void _incrementQuantity() {
     setState(() {
       quantity++;
+      widget.updateCart(widget.foodItem, quantity);
     });
-    widget.addToCart(widget.foodItem, 1);
   }
 
   void _decrementQuantity() {
     if (quantity > 0) {
       setState(() {
         quantity--;
+        widget.updateCart(widget.foodItem, quantity);
       });
-      widget.addToCart(widget.foodItem, -1);
     }
+  }
+
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Add to Cart'),
+          content:
+              Text('Add ${widget.foodItem.name} (Qty: $quantity) to cart?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: Text('Add to Cart'),
+              onPressed: () {
+                widget.updateCart(widget.foodItem, quantity);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -179,7 +226,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  widget.formatCurrency(widget.foodItem.price),
+                  widget.formatCurrency(widget.foodItem.price * quantity),
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[700],
@@ -211,6 +258,13 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                   color: Theme.of(context).primaryColor,
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: _showConfirmationDialog,
+              child: Text('Add to Cart'),
             ),
           ),
         ],

@@ -1,6 +1,6 @@
+import 'package:baked/pages/MenuPage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:baked/widgets/MenuListWidget.dart';
 
 class MenuHomeWidget extends StatefulWidget {
   @override
@@ -52,6 +52,7 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
   ];
 
   Map<String, int> _cartItems = {};
+  int _totalCartItems = 0;
 
   String formatCurrency(double amount) {
     try {
@@ -72,8 +73,18 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
         } else {
           _cartItems[foodItem.name] = quantity;
         }
+        _totalCartItems = getTotalCartItems(); // Update total cart items
       });
     }
+  }
+
+  // Metode untuk mendapatkan jumlah total item dalam keranjang
+  int getTotalCartItems() {
+    int total = 0;
+    _cartItems.forEach((key, value) {
+      total += value;
+    });
+    return total;
   }
 
   @override
@@ -101,7 +112,7 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MenuListWidget(),
+                        builder: (context) => MenuPageContent(),
                       ),
                     );
                   },
