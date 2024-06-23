@@ -50,7 +50,7 @@ class PopularItemsWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Best Seller",
+                "Our Best Seller",
                 style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.bold,
