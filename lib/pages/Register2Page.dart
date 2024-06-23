@@ -64,7 +64,7 @@ class Register2Page extends StatelessWidget {
               SizedBox(height: 50),
               InkWell(
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, "register2page");
+                  Navigator.pushReplacementNamed(context, "homepage");
                 },
                 child: Container(
                   width: MediaQuery.of(context).size.width * 1.0,
