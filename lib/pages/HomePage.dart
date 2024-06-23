@@ -1,13 +1,18 @@
 import 'package:baked/pages/MenuPage.dart';
-import 'package:baked/widgets/CategoriesWidget.dart';
-import 'package:baked/widgets/PopularItemsWidget.dart';
-import 'package:baked/widgets/MenuHomeWidget.dart';
+import 'package:baked/pages/OrderPage.dart';
+import 'package:baked/providers/order_provider.dart';
 import 'package:baked/widgets/MenuListWidget.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:baked/widgets/PopularItemsWidget.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => OrderProvider(), // Inisialisasi OrderProvider
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -36,17 +41,9 @@ class _HomePageState extends State<HomePage> {
 
   // List of widgets corresponding to each tab
   final List<Widget> _tabs = [
-    HomePageContent(), // Placeholder for Home page content
-    MenuPageContent(), // Placeholder for Menu page content
-    Container(
-      color: Colors.blueGrey,
-      child: Center(
-        child: Text(
-          'Order',
-          style: TextStyle(fontSize: 30, color: Colors.white),
-        ),
-      ),
-    ),
+    HomePageContent(),
+    MenuPageContent(),
+    OrderPage(),
     Container(
       color: Colors.teal,
       child: Center(
@@ -179,7 +176,7 @@ class HomePageContent extends StatelessWidget {
               children: [
                 // CategoriesWidget(),
                 PopularItemsWidget(),
-                MenuHomeWidget()
+                MenuListWidget(limit: 4)
               ],
             ),
           ),
