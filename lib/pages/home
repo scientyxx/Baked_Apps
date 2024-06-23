@@ -2,100 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:baked/widgets/MenuListWidget.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
+class MenuListWidget extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Your App',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        textTheme: TextTheme(
-            // Atur gaya teks sesuai dengan kebutuhan Anda
-            ),
-      ),
-      home: HomePage(),
-    );
-  }
+  _MenuListWidgetState createState() => _MenuListWidgetState();
 }
 
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
-
-  // List of widgets corresponding to each tab
-  final List<Widget> _tabs = [
-    HomePageContent(), // Placeholder for Home page content
-    MenuListWidget(), // Placeholder for Menu page content
-    Container(
-      color: Colors.blueGrey,
-      child: Center(
-        child: Text(
-          'Order',
-          style: TextStyle(fontSize: 30, color: Colors.white),
-        ),
-      ),
-    ),
-    Container(
-      color: Colors.teal,
-      child: Center(
-        child: Text(
-          'Profile',
-          style: TextStyle(fontSize: 30, color: Colors.white),
-        ),
-      ),
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: _tabs[_currentIndex],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: 'Menu',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Order',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        unselectedItemColor: Color(0xFF50555C),
-        selectedItemColor: Color(0xFFC35A2E),
-        unselectedLabelStyle: TextStyle(color: Color(0xFF50555C)),
-        selectedLabelStyle: TextStyle(color: Color(0xFFC35A2E)),
-      ),
-    );
-  }
-}
-
-class HomePageContent extends StatelessWidget {
+class _MenuListWidgetState extends State<MenuListWidget> {
   final List<FoodItem> foodItems = [
     FoodItem(
       name: "Quiche Lorraine",
@@ -137,7 +49,44 @@ class HomePageContent extends StatelessWidget {
       imagePath: "images/8.png",
       price: 48000,
     ),
+    FoodItem(
+      name: "Blueberry Muffin",
+      imagePath: "images/9.png",
+      price: 30000,
+    ),
+    FoodItem(
+      name: "Baguette",
+      imagePath: "images/10.png",
+      price: 15000,
+    ),
+    FoodItem(
+      name: "Cheesecake",
+      imagePath: "images/11.png",
+      price: 48000,
+    ),
+    FoodItem(
+      name: "Blueberry Muffin",
+      imagePath: "images/12.png",
+      price: 30000,
+    ),
+    FoodItem(
+      name: "Baguette",
+      imagePath: "images/13.png",
+      price: 15000,
+    ),
+    FoodItem(
+      name: "Cheesecake",
+      imagePath: "images/14.png",
+      price: 48000,
+    ),
+    FoodItem(
+      name: "Cheesecake",
+      imagePath: "images/15.png",
+      price: 48000,
+    ),
   ];
+
+  Map<String, int> _cartItems = {};
 
   String formatCurrency(double amount) {
     try {
@@ -150,131 +99,47 @@ class HomePageContent extends StatelessWidget {
     }
   }
 
+  void addToCart(FoodItem foodItem, int quantity) {
+    if (quantity > 0) {
+      setState(() {
+        if (_cartItems.containsKey(foodItem.name)) {
+          _cartItems[foodItem.name] = _cartItems[foodItem.name]! + quantity;
+        } else {
+          _cartItems[foodItem.name] = quantity;
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  "images/logo.png",
-                  height: 100,
-                ),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 5),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: foodItems.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.75,
+              ),
+              itemBuilder: (context, index) {
+                return MenuItemWidget(
+                  foodItem: foodItems[index],
+                  formatCurrency: formatCurrency,
+                  addToCart: addToCart,
+                );
+              },
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Welcome",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  "What do you want to buy?",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.all(16),
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            height: 50,
-            decoration: BoxDecoration(
-              color: Color(0xFFEDE9E9),
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.search),
-                SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: "Search here...",
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                Icon(Icons.filter_list),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                PopularItemsWidget(),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Menu List",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // Navigasi ke halaman MenuListWidget jika diperlukan
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MenuListWidget(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "See More",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10),
-                // Tampilan 8 item menu seperti di MenuListWidget
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: foodItems.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.75,
-                  ),
-                  itemBuilder: (context, index) {
-                    return MenuItemWidget(
-                      foodItem: foodItems[index],
-                      formatCurrency: formatCurrency,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -283,8 +148,13 @@ class HomePageContent extends StatelessWidget {
 class MenuItemWidget extends StatefulWidget {
   final FoodItem foodItem;
   final String Function(double) formatCurrency;
+  final void Function(FoodItem, int) addToCart;
 
-  MenuItemWidget({required this.foodItem, required this.formatCurrency});
+  MenuItemWidget({
+    required this.foodItem,
+    required this.formatCurrency,
+    required this.addToCart,
+  });
 
   @override
   _MenuItemWidgetState createState() => _MenuItemWidgetState();
@@ -297,6 +167,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
     setState(() {
       quantity++;
     });
+    widget.addToCart(widget.foodItem, 1);
   }
 
   void _decrementQuantity() {
@@ -304,6 +175,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
       setState(() {
         quantity--;
       });
+      widget.addToCart(widget.foodItem, -1);
     }
   }
 
@@ -322,7 +194,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.asset(
                 widget.foodItem.imagePath,
-                width: double.infinity,
+                width: 150,
                 fit: BoxFit.cover,
               ),
             ),
