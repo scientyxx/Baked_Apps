@@ -1,6 +1,9 @@
 import 'package:baked/pages/ContinuePage.dart';
+import 'package:baked/pages/CoverPage.dart';
+import 'package:baked/pages/EditProfilePage.dart';
 import 'package:baked/pages/HomePage.dart';
 import 'package:baked/pages/LoginPage.dart';
+import 'package:baked/pages/ProfilePage.dart';
 import 'package:baked/pages/Register2Page.dart';
 import 'package:baked/pages/RegisterPage.dart';
 import 'package:baked/pages/StartingPage.dart';
@@ -25,14 +28,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       routes: {
-        // "/": (context) => CoverPage(),
-        "/": (context) => HomePage(),
+        "/": (context) => CoverPage(),
+        // "/": (context) => HomePage(),
         "homepage": (context) => HomePage(),
         "startingpage": (context) => StartingPage(),
         "continuepage": (context) => ContinuePage(),
         "loginpage": (context) => LoginPage(),
         "registerpage": (context) => RegisterPage(),
         "register2page": (context) => Register2Page(),
+        "editprofilepage": (context) => EditProfilePageContent(),
+        "profilepage": (context) => ProfilePageContent(),
       },
       debugShowMaterialGrid: false, // ini buat ngilangin debug
     );

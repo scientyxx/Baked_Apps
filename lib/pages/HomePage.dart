@@ -1,5 +1,6 @@
 import 'package:baked/pages/MenuPage.dart';
 import 'package:baked/pages/OrderPage.dart';
+import 'package:baked/pages/ProfilePage.dart';
 import 'package:baked/providers/order_provider.dart';
 import 'package:baked/widgets/MenuListWidget.dart';
 import 'package:baked/widgets/PopularItemsWidget.dart';
@@ -22,9 +23,7 @@ class MyApp extends StatelessWidget {
       title: 'Your App',
       theme: ThemeData(
         primarySwatch: Colors.orange,
-        textTheme: TextTheme(
-            // Atur gaya teks sesuai dengan kebutuhan Anda
-            ),
+        textTheme: TextTheme(),
       ),
       home: HomePage(),
     );
@@ -37,38 +36,45 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final PageController _pageController = PageController(initialPage: 0);
   int _currentIndex = 0;
 
-  // List of widgets corresponding to each tab
   final List<Widget> _tabs = [
     HomePageContent(),
     MenuPageContent(),
     OrderPage(),
-    Container(
-      color: Colors.teal,
-      child: Center(
-        child: Text(
-          'Profile',
-          style: TextStyle(fontSize: 30, color: Colors.white),
-        ),
-      ),
-    ),
+    ProfilePageContent(),
   ];
+
+  void onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    _pageController.animateToPage(
+      index,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: _tabs[_currentIndex],
+        child: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          children: _tabs,
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: onTabTapped,
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -176,6 +182,36 @@ class HomePageContent extends StatelessWidget {
               children: [
                 // CategoriesWidget(),
                 PopularItemsWidget(),
+                Padding(
+                  padding:
+                      EdgeInsets.only(right: 10, bottom: 10, top: 50, left: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Another Menu",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          final homePageState =
+                              context.findAncestorStateOfType<_HomePageState>();
+                          homePageState?.onTabTapped(1);
+                        },
+                        child: Text(
+                          "See More",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFFC35A2E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 MenuListWidget(limit: 4)
               ],
             ),

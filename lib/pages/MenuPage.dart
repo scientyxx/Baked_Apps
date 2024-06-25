@@ -1,17 +1,68 @@
 import 'package:baked/models/order.dart';
+import 'package:baked/pages/HomePage.dart';
+import 'package:baked/pages/OrderPage.dart';
 import 'package:baked/providers/order_provider.dart';
 import 'package:baked/widgets/MenuListWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class MenuPage extends StatelessWidget {
+class MenuPage extends StatefulWidget {
+  @override
+  _MenuPageState createState() => _MenuPageState();
+}
+
+class _MenuPageState extends State<MenuPage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _tabs = [
+    HomePageContent(),
+    MenuPageContent(),
+    OrderPage(),
+    Container(
+      color: Colors.teal,
+      child: Center(
+        child: Text(
+          'Profile',
+          style: TextStyle(fontSize: 30, color: Colors.white),
+        ),
+      ),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Menu'),
+      body: _tabs[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant_menu),
+            label: 'Menu',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Order',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        unselectedItemColor: Color(0xFF50555C),
+        selectedItemColor: Color(0xFFC35A2E),
+        unselectedLabelStyle: TextStyle(color: Color(0xFF50555C)),
+        selectedLabelStyle: TextStyle(color: Color(0xFFC35A2E)),
       ),
-      body: MenuPageContent(),
     );
   }
 }
@@ -35,7 +86,24 @@ class MenuPageContent extends StatelessWidget {
             ),
           ),
           Container(
-            padding: EdgeInsets.only(top: 20),
+            alignment: Alignment.centerLeft,
+            padding: EdgeInsets.symmetric(horizontal: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Menu",
+                  style: TextStyle(
+                    fontSize: 35,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.only(top: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(30),
