@@ -8,81 +8,45 @@ class OrderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('Your Orders'),
-      // ),
-      body: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.only(right: 20, left: 15, top: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  "images/logo.png",
-                  height: 100,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.symmetric(horizontal: 15),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Your Order",
-                  style: TextStyle(
-                    fontSize: 35,
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Consumer<OrderProvider>(
-              builder: (context, orderProvider, child) {
-                if (orderProvider.orders.isEmpty) {
-                  return Center(
-                    child: Text('No orders yet'),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: orderProvider.orders.length,
-                  itemBuilder: (context, index) {
-                    Order order = orderProvider.orders[index];
-                    return OrderItemWidget(order: order);
+      appBar: AppBar(
+        title: Text('Your Orders'),
+        actions: [
+          Consumer<OrderProvider>(
+            builder: (context, orderProvider, child) {
+              if (orderProvider.orders.isNotEmpty) {
+                return IconButton(
+                  icon: Icon(Icons.qr_code),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            QrCodePage(orders: orderProvider.orders),
+                      ),
+                    );
                   },
                 );
-              },
-            ),
+              } else {
+                return Container();
+              }
+            },
           ),
         ],
       ),
-      floatingActionButton: Consumer<OrderProvider>(
+      body: Consumer<OrderProvider>(
         builder: (context, orderProvider, child) {
-          if (orderProvider.orders.isNotEmpty) {
-            return FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        QrCodePage(orders: orderProvider.orders),
-                  ),
-                );
-              },
-              backgroundColor: Color(0xFFC35A2E),
-              foregroundColor: Colors.white,
-              icon: Icon(Icons.qr_code),
-              label: Text('Payment Now'),
+          if (orderProvider.orders.isEmpty) {
+            return Center(
+              child: Text('No orders yet'),
             );
-          } else {
-            return Container();
           }
+          return ListView.builder(
+            itemCount: orderProvider.orders.length,
+            itemBuilder: (context, index) {
+              Order order = orderProvider.orders[index];
+              return OrderItemWidget(order: order);
+            },
+          );
         },
       ),
     );

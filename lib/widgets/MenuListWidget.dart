@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 class MenuListWidget extends StatefulWidget {
   final int limit;
 
-  MenuListWidget({this.limit = 8}); // Default to 4 if no limit is provided
+  MenuListWidget({this.limit = 8}); // Default to 8 if no limit is provided
 
   @override
   _MenuListWidgetState createState() => _MenuListWidgetState();
@@ -198,7 +198,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: ClipRRect(
@@ -211,62 +211,67 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(2),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   widget.foodItem.name,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.left,
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 0),
                 Text(
-                  widget.formatCurrency(widget.foodItem.price * quantity),
+                  widget.formatCurrency(
+                      widget.foodItem.price * (quantity > 0 ? quantity : 1)),
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[700],
                   ),
+                  textAlign: TextAlign.left,
                 ),
               ],
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(horizontal: 2),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
                   icon: Icon(Icons.remove),
                   onPressed: _decrementQuantity,
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFFC35A2E),
                 ),
                 Text(
                   quantity.toString(),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.add),
                   onPressed: _incrementQuantity,
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFFC35A2E),
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: _showConfirmationDialog,
-              child: Text('Add to Cart'),
-            ),
-          ),
+          // Center(
+          //   child: Padding(
+          //     padding: const EdgeInsets.all(8.0),
+          //     child: ElevatedButton(
+          //       onPressed: _showConfirmationDialog,
+          //       child: Text('Add to Cart'),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
