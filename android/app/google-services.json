@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "773122640368",
+    "project_id": "bakedapps-dfda2",
+    "storage_bucket": "bakedapps-dfda2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773122640368:android:f3fb6f55ffaf07aa87b535",
+        "android_client_info": {
+          "package_name": "com.paramadina.BakedApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbxv4uOLs51HpCl4OYLa9dzd_oFyKolbc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

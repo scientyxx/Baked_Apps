@@ -1,55 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class RegisterPage extends StatefulWidget {
-  @override
-  _RegisterPageState createState() => _RegisterPageState();
-}
-
-class _RegisterPageState extends State<RegisterPage> {
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  bool _obscureText = true;
-
-  void _togglePasswordVisibility() {
-    setState(() {
-      _obscureText = !_obscureText;
-    });
-  }
-
-  void registerWithEmailPassword(BuildContext context) async {
-    try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );
-      // Jika berhasil, lanjutkan navigasi ke halaman Register2Page
-      Navigator.pushReplacementNamed(context, "register2page");
-    } catch (e) {
-      // Handle error registration here.
-      print("Error: $e");
-      // Contoh: Tampilkan pesan kesalahan kepada pengguna.
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Error"),
-            content: Text("Registration failed. Please try again later."),
-            actions: <Widget>[
-              TextButton(
-                child: Text("OK"),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
-  }
-
+class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -60,7 +11,7 @@ class _RegisterPageState extends State<RegisterPage> {
             leading: IconButton(
               icon: Icon(Icons.arrow_back),
               onPressed: () {
-                Navigator.pushNamed(context, "continuepage");
+                Navigator.pop(context);
               },
             ),
             centerTitle: true,
@@ -77,7 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
             children: [
               SizedBox(height: 20),
               Text(
-                "Register",
+                "Log in",
                 textAlign: TextAlign.left,
                 style: TextStyle(
                   fontFamily: 'Baloo Chettan',
@@ -87,47 +38,33 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               SizedBox(height: 30),
               TextFormField(
-                controller: emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   labelStyle: TextStyle(color: Colors.black),
                   border: OutlineInputBorder(),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color.fromRGBO(195, 90, 45, 10),
-                      width: 2.0,
-                    ),
+                        color: Color.fromRGBO(195, 90, 45, 10), width: 2.0),
                   ),
                 ),
               ),
               SizedBox(height: 20),
               TextFormField(
-                controller: passwordController,
-                obscureText:
-                    _obscureText, // Password diubah menjadi titik-titik
+                obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Password',
                   labelStyle: TextStyle(color: Colors.black),
                   border: OutlineInputBorder(),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color.fromRGBO(195, 90, 45, 10),
-                      width: 2.0,
-                    ),
-                  ),
-                  suffixIcon: IconButton(
-                    // Icon untuk mengubah password terlihat atau tidak
-                    icon: Icon(
-                      _obscureText ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: _togglePasswordVisibility,
+                        color: Color.fromRGBO(195, 90, 45, 10), width: 2.0),
                   ),
                 ),
               ),
               SizedBox(height: 50),
               InkWell(
                 onTap: () {
-                  registerWithEmailPassword(context);
+                  Navigator.pushReplacementNamed(context, "register2page");
                 },
                 child: Container(
                   width: MediaQuery.of(context).size.width * 1.0,
@@ -136,9 +73,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                     color: Color.fromRGBO(195, 90, 45, 10),
                     border: Border.all(
-                      color: Color.fromRGBO(195, 90, 45, 10),
-                      width: 2,
-                    ),
+                        color: Color.fromRGBO(195, 90, 45, 10), width: 2),
                   ),
                   child: Center(
                     child: Text(
@@ -161,5 +96,5 @@ class _RegisterPageState extends State<RegisterPage> {
 }
 
 void main() {
-  runApp(RegisterPage());
+  runApp(LoginPage());
 }
