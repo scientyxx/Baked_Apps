@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class CoverPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    print("CoverPage is being built"); // Tambahkan pesan debug
     return Scaffold(
       backgroundColor: Color.fromRGBO(254, 210, 119, 5),
       body: Center(
@@ -16,6 +17,7 @@ class CoverPage extends StatelessWidget {
             SizedBox(height: MediaQuery.of(context).size.height * 0.1),
             ElevatedButton(
               onPressed: () {
+                print("Get Started button pressed"); // Tambahkan pesan debug
                 Navigator.pushReplacementNamed(context, "startingpage");
               },
               style: ElevatedButton.styleFrom(
@@ -42,8 +44,4 @@ class CoverPage extends StatelessWidget {
       ),
     );
   }
-}
-
-void main() {
-  runApp(CoverPage());
 }

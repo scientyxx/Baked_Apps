@@ -1,7 +1,51 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class EditProfilePageContent extends StatelessWidget {
+class EditProfilePageContent extends StatefulWidget {
+  @override
+  _EditProfilePageContentState createState() => _EditProfilePageContentState();
+}
+
+class _EditProfilePageContentState extends State<EditProfilePageContent> {
   final _formKey = GlobalKey<FormState>();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController addressController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(user.uid).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          nameController.text = userDoc['name'] ?? '';
+          addressController.text = userDoc['address'] ?? '';
+        });
+      } else {
+        // Handle case when document does not exist
+        setState(() {
+          nameController.text = '';
+          addressController.text = '';
+        });
+      }
+    } else {
+      // Handle case when user is not logged in
+      setState(() {
+        nameController.text = '';
+        addressController.text = '';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,30 +78,7 @@ class EditProfilePageContent extends StatelessWidget {
                 ),
                 SizedBox(height: 20),
                 TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    labelStyle: TextStyle(color: Colors.black),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Color.fromRGBO(195, 90, 45, 1),
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    // You can add more validation logic here (e.g., email format)
-                    return null;
-                  },
-                  onSaved: (value) {
-                    // Handle saving email
-                  },
-                ),
-                SizedBox(height: 20),
-                TextFormField(
+                  controller: nameController,
                   decoration: InputDecoration(
                     labelText: 'Name',
                     labelStyle: TextStyle(color: Colors.black),
@@ -75,12 +96,10 @@ class EditProfilePageContent extends StatelessWidget {
                     }
                     return null;
                   },
-                  onSaved: (value) {
-                    // Handle saving name
-                  },
                 ),
                 SizedBox(height: 20),
                 TextFormField(
+                  controller: addressController,
                   decoration: InputDecoration(
                     labelText: 'Address',
                     labelStyle: TextStyle(color: Colors.black),
@@ -98,16 +117,24 @@ class EditProfilePageContent extends StatelessWidget {
                     }
                     return null;
                   },
-                  onSaved: (value) {
-                    // Handle saving address
-                  },
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      Navigator.pushReplacementNamed(context, "homepage");
+                      // Simpan perubahan ke Firestore
+                      User? user = _auth.currentUser;
+                      if (user != null) {
+                        await _firestore
+                            .collection('users')
+                            .doc(user.uid)
+                            .update({
+                          'name': nameController.text,
+                          'address': addressController.text,
+                        });
+                        // Kembali ke halaman profil setelah menyimpan
+                        Navigator.pushReplacementNamed(context, "homepage");
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
