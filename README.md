@@ -1,7 +1,6 @@
 # BakedApps
 
-BakedApps adalah aplikasi mobile menggunakan Flutter yang mempermudah pelanggan untuk memesan makanan tanpa perlu mengantri.
-Aplikasi ini cocok untuk restoran atau kafe yang ingin meningkatkan efisiensi layanan mereka.
+BakedApps adalah aplikasi mobile menggunakan Flutter yang mempermudah pelanggan untuk memesan makanan tanpa perlu mengantri. Aplikasi ini cocok untuk restoran atau kafe yang ingin meningkatkan efisiensi layanan mereka.
 
 ## Fitur Utama
 
@@ -11,6 +10,12 @@ Aplikasi ini cocok untuk restoran atau kafe yang ingin meningkatkan efisiensi la
 
 ## SnapShoot
 
-![alt text](image.png) ![alt text](image-1.png)
+<div style="display: flex; justify-content: space-between;">
+  <img src="image.png" alt="Screenshot 1" width="200"/>
+  <img src="image-1.png" alt="Screenshot 2" width="200"/>
+</div>
 
-![alt text](image-2.png) ![alt text](image-3.png)
+<div style="display: flex; justify-content: space-between;">
+  <img src="image-2.png" alt="Screenshot 3" width="200"/>
+  <img src="image-3.png" alt="Screenshot 4" width="200"/>
+</div>
