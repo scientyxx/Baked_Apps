@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 class MenuListWidget extends StatefulWidget {
   final int limit;
 
-  MenuListWidget({this.limit = 8}); // Default to 8 if no limit is provided
+  MenuListWidget({this.limit = 10});
 
   @override
   _MenuListWidgetState createState() => _MenuListWidgetState();
@@ -16,44 +16,54 @@ class MenuListWidget extends StatefulWidget {
 class _MenuListWidgetState extends State<MenuListWidget> {
   final List<FoodItem> foodItems = [
     FoodItem(
-      name: "Quiche Lorraine",
+      name: "Apple Pie",
       imagePath: "images/1.png",
       price: 40000,
     ),
     FoodItem(
-      name: "Croissant Sandwich",
+      name: "Fruit Tart",
       imagePath: "images/2.png",
-      price: 50000,
+      price: 45000,
     ),
     FoodItem(
       name: "Danish Pastry",
       imagePath: "images/3.png",
-      price: 45000,
+      price: 30000,
     ),
     FoodItem(
-      name: "Cinnamon Roll",
+      name: "Cheese Puff Pastry",
       imagePath: "images/4.png",
       price: 35000,
     ),
     FoodItem(
-      name: "Chocolate Cake",
+      name: "Cinnamon Roll",
       imagePath: "images/5.png",
-      price: 55000,
+      price: 45000,
     ),
     FoodItem(
-      name: "Blueberry Muffin",
+      name: "Blueberry Danish",
       imagePath: "images/6.png",
-      price: 30000,
+      price: 35000,
     ),
     FoodItem(
-      name: "Baguette",
+      name: "Chicken Puff Isolated",
       imagePath: "images/7.png",
-      price: 15000,
+      price: 35000,
     ),
     FoodItem(
-      name: "Cheesecake",
+      name: "Croissant Sandwich",
       imagePath: "images/8.png",
-      price: 48000,
+      price: 50000,
+    ),
+    FoodItem(
+      name: "Quiche Lorraine",
+      imagePath: "images/9.png",
+      price: 40000,
+    ),
+    FoodItem(
+      name: "Classic Cheesecake",
+      imagePath: "images/10.png",
+      price: 45000,
     ),
   ];
 
@@ -74,7 +84,7 @@ class _MenuListWidgetState extends State<MenuListWidget> {
         name: foodItem.name,
         price: foodItem.price.toDouble(),
         quantity: quantity,
-        imagePath: foodItem.imagePath, // Use correct imagePath
+        imagePath: foodItem.imagePath,
       );
       if (quantity > 0) {
         Provider.of<OrderProvider>(context, listen: false).addOrder(order);
@@ -99,7 +109,7 @@ class _MenuListWidgetState extends State<MenuListWidget> {
             GridView.builder(
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
-              itemCount: limitedFoodItems.length, // Use limitedFoodItems.length
+              itemCount: limitedFoodItems.length, //
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
@@ -108,7 +118,7 @@ class _MenuListWidgetState extends State<MenuListWidget> {
               ),
               itemBuilder: (context, index) {
                 return MenuItemWidget(
-                  foodItem: limitedFoodItems[index], // Use limitedFoodItems
+                  foodItem: limitedFoodItems[index],
                   formatCurrency: formatCurrency,
                   updateCart: updateCart,
                 );

@@ -27,7 +27,7 @@ class PopularItemsWidget extends StatelessWidget {
       description:
           "Danish pastry with custard filling and a dusting of powdered sugar.",
       imagePath: "images/best_seller/4.png",
-      price: 35000,
+      price: 30000,
     ),
   ];
 

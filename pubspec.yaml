@@ -39,8 +39,12 @@ dependencies:
   json_serializable: ^6.0.0
   barcode_widget: ^2.0.1
   firebase_core: ^3.1.1
+  firebase_database: ^11.0.2
   firebase_auth: ^5.1.1
   cloud_firestore: ^5.0.2
+  http: ^0.13.4
+  
+  
 
 dev_dependencies:
   flutter_test:
@@ -75,8 +79,6 @@ flutter:
     - images/10.png
     - images/11.png
     - images/12.png
-    - images/13.png
-    - images/14.png
     - images/15.png
     - images/best_seller/
   #   - images/a_dot_ham.jpeg
