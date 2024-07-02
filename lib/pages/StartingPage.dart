@@ -5,23 +5,25 @@ class StartingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(80),
-          child: AppBar(
-            centerTitle: true,
-            title: Image.asset(
-              "images/logo.png",
-              height: 70,
-            ),
-          ),
-        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
+              Container(
+                padding: EdgeInsets.only(right: 20, left: 15, top: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      "images/logo.png",
+                      height: 100,
+                    ),
+                  ],
+                ),
+              ),
               Image.asset(
                 "images/25.png",
-                height: MediaQuery.of(context).size.height * 0.5,
+                height: MediaQuery.of(context).size.width * 0.75,
               ),
               Text(
                 "Home Of All Your\nFavorite Pastries!",
@@ -77,9 +79,11 @@ class StartingPage extends StatelessWidget {
                   height: MediaQuery.of(context).size.height * 0.06,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
-                    color: Color.fromRGBO(195, 90, 45, 10),
+                    color: Color.fromRGBO(195, 90, 45, 1),
                     border: Border.all(
-                        color: Color.fromRGBO(195, 90, 45, 10), width: 2),
+                      color: Color.fromRGBO(195, 90, 45, 1),
+                      width: 2,
+                    ),
                   ),
                   child: Center(
                     child: Text(

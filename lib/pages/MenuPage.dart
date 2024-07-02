@@ -1,6 +1,7 @@
 import 'package:baked/models/order.dart';
 import 'package:baked/pages/HomePage.dart';
 import 'package:baked/pages/OrderPage.dart';
+import 'package:baked/pages/ProfilePage.dart';
 import 'package:baked/providers/order_provider.dart';
 import 'package:baked/widgets/MenuListWidget.dart';
 import 'package:flutter/material.dart';
@@ -18,15 +19,7 @@ class _MenuPageState extends State<MenuPage> {
     HomePageContent(),
     MenuPageContent(),
     OrderPage(),
-    Container(
-      color: Colors.teal,
-      child: Center(
-        child: Text(
-          'Profile',
-          style: TextStyle(fontSize: 30, color: Colors.white),
-        ),
-      ),
-    ),
+    ProfilePageContent(),
   ];
 
   @override

@@ -1,24 +1,10 @@
-<<<<<<< HEAD
+# BakedApps
 
-# Baked_Apps
+BakedApps adalah aplikasi mobile menggunakan Flutter yang mempermudah pelanggan untuk memesan makanan tanpa perlu mengantri.
+Aplikasi ini cocok untuk restoran atau kafe yang ingin meningkatkan efisiensi layanan mereka.
 
-=======
+## Fitur Utama
 
-# baked
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
-> > > > > > > master
+- **Pemesanan Makanan**: Pelanggan dapat memesan makanan langsung dari aplikasi tanpa harus mengantri di kasir.
+- **Barcode Pembayaran**: Setelah memilih makanan, pelanggan dapat menggunakan tombol "Payment Now" untuk menghasilkan barcode pembayaran. Barcode ini harus dibawa ke kasir untuk proses pembayaran.
+- **Desain User-Friendly**: Antarmuka yang intuitif memungkinkan pelanggan dengan mudah menavigasi dan memesan makanan.
