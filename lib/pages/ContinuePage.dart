@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 class ContinuePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+        home: Scaffold(
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Container(
               padding: EdgeInsets.only(right: 20, left: 15, top: 10),
@@ -99,7 +100,7 @@ class ContinuePage extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 
