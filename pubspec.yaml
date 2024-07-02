@@ -81,6 +81,7 @@ flutter:
     - images/12.png
     - images/15.png
     - images/best_seller/
+    - images/snapshoot/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
