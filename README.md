@@ -15,4 +15,6 @@ BakedApps adalah aplikasi mobile menggunakan Flutter yang mempermudah pelanggan 
   <img src="image-1.png" alt="Screenshot 2" width="150"/>
   <img src="image-4.png" alt="Screenshot 3" width="150"/>
   <img src="image-3.png" alt="Screenshot 4" width="150"/>
+  <img src="image-5.png" alt="Screenshot 5" width="150"/>
+  <img src="image-6.png" alt="Screenshot 6" width="150"/>
 </div>
