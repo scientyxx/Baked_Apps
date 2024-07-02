@@ -8,7 +8,7 @@ BakedApps adalah aplikasi mobile menggunakan Flutter yang mempermudah pelanggan 
 - **Barcode Pembayaran**: Setelah memilih makanan, pelanggan dapat menggunakan tombol "Payment Now" untuk menghasilkan barcode pembayaran. Barcode ini harus dibawa ke kasir untuk proses pembayaran.
 - **Desain User-Friendly**: Antarmuka yang intuitif memungkinkan pelanggan dengan mudah menavigasi dan memesan makanan.
 
-## SnapShoot
+## App Snapshots
 
 <div style="display: flex; justify-content: space-between;">
   <img src="images/snapshoot/image.png" alt="Screenshot 1" width="150"/>
