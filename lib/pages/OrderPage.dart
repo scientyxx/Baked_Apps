@@ -1,4 +1,7 @@
+import 'package:baked/controllers/auth_controller.dart';
+import 'package:baked/controllers/menu_controller.dart' as app_menu_controller;
 import 'package:baked/controllers/order_controller.dart';
+import 'package:baked/models/katalog.dart'; // Pastikan ini diimport
 import 'package:baked/models/order.dart';
 import 'package:baked/pages/QrCodePage.dart';
 import 'package:baked/providers/order_provider.dart';
@@ -64,31 +67,51 @@ class OrderPage extends StatelessWidget {
         builder: (context, orderProvider, child) {
           if (orderProvider.orders.isNotEmpty) {
             return FloatingActionButton.extended(
-              onPressed: () {
-                // --- LOGIKA PENTING UNTUK MENGIRIM KE DATABASE ---
+              onPressed: () async {
                 final orderController = Provider.of<OrderController>(context, listen: false);
+                final authController = Provider.of<AuthController>(context, listen: false);
+                final menuController = Provider.of<app_menu_controller.MenuController>(context, listen: false);
 
-                // Loop melalui setiap item di keranjang OrderProvider
-                for (Order itemInCart in orderProvider.orders) {
-                  // Panggil updateOrderQuantity di OrderController untuk setiap item
-                  // Ini akan memicu penyimpanan ke Realtime Database
-                  orderController.updateOrderQuantity(itemInCart, itemInCart.quantity);
+                // Dapatkan customerId dari AuthController
+                String? customerId = authController.currentUser?.uid;
+
+                if (customerId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please log in to place an order. (Customer ID is null)')),
+                  );
+                  return;
                 }
 
-                // Opsional: Setelah semua item dikirim ke DB, kosongkan keranjang lokal
-                // Ini dilakukan setelah data dikirim, bukan sebelum Navigator.push
-                orderProvider.clearCart();
-                // --- AKHIR LOGIKA PENTING ---
+                String uniqueOrderId = DateTime.now().millisecondsSinceEpoch.toString();
 
-                // Navigasi ke halaman QR Code
+                for (Order itemInCart in orderProvider.orders) {
+                  Katalog? correspondingKatalogItem;
+                  try {
+                    correspondingKatalogItem = menuController.menuItems
+                        .firstWhere((katalogItem) => katalogItem.namaMakanan == itemInCart.name);
+                  } catch (e) {
+                    print("Could not find corresponding Katalog item for ${itemInCart.name}: $e");
+                  }
+
+                  if (correspondingKatalogItem != null && correspondingKatalogItem.id != null) {
+                    await orderController.addOrUpdateTransaksiFromOrder(
+                      orderItem: itemInCart,
+                      idCustomer: customerId,
+                      idMakananKatalog: correspondingKatalogItem.id!,
+                      idOrderOverall: uniqueOrderId,
+                    );
+                  } else {
+                    print("Warning: Skipping item ${itemInCart.name}. Could not find corresponding Katalog item or item ID is null.");
+                  }
+                }
+
+                orderProvider.clearCart();
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        // Penting: Jika QrCodePage perlu data yang baru dikirim,
-                        // Anda mungkin perlu mengirim salinan orderProvider.orders
-                        // SEBELUM clearCart, atau mengambilnya dari OrderController jika sudah di DB.
-                        QrCodePage(orders: List<Order>.from(orderProvider.orders)), // Kirim salinan jika dibutuhkan
+                        QrCodePage(orders: []),
                   ),
                 );
               },

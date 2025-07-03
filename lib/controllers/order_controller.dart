@@ -1,81 +1,88 @@
-// lib/controllers/order_controller.dart
-import 'package:baked/models/order.dart';
-import 'package:firebase_database/firebase_database.dart'; // Import ini
+import 'package:baked/models/order.dart' as app_order_model;
+import 'package:baked/models/transaksi.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 class OrderController with ChangeNotifier {
-  // HAPUS BARIS firebaseUrl dan firebaseToken
-  // final String firebaseUrl = 'https://bakedapps-dfda2-default-rtdb.firebaseio.com/';
-  // final String firebaseToken = 'AIzaSyDW88BGk2cXVfTTUmp4X7pFuPeKz0eLA3E';
+  final DatabaseReference _transaksiRef = FirebaseDatabase.instance.ref().child('transaksi');
 
-  // Inisialisasi DatabaseReference TANPA URL di sini.
-  // URL akan diambil otomatis dari Firebase.initializeApp() di main.dart.
-  final DatabaseReference _ordersRef = FirebaseDatabase.instance.ref().child('orders');
-  // final FirebaseAuth _auth = FirebaseAuth.instance; // Ini opsional, hanya jika Anda perlu mengakses user auth langsung di sini
+  List<Transaksi> _transaksiItems = [];
 
-  List<Order> _orders = [];
-
-  List<Order> get orders => _orders;
+  List<Transaksi> get transaksiItems => _transaksiItems;
 
   OrderController() {
-    _listenToOrders();
+    _listenToTransaksi();
   }
 
-  void _listenToOrders() {
-    _ordersRef.onValue.listen((event) {
+  void _listenToTransaksi() {
+    _transaksiRef.onValue.listen((event) {
       final data = event.snapshot.value;
-      _orders.clear();
+      _transaksiItems.clear();
       if (data != null && data is Map) {
         data.forEach((key, value) {
           try {
-            // Pastikan Order.fromJson dapat menangani Map<String, dynamic>
-            _orders.add(Order.fromJson(Map<String, dynamic>.from(value)));
+            _transaksiItems.add(Transaksi.fromJson(Map<String, dynamic>.from(value), key));
           } catch (e) {
-            print("Error parsing order from Firebase: $e, data: $value");
+            print("Error parsing transaksi from Firebase: $e, data: $value");
           }
         });
       }
       notifyListeners();
     }, onError: (error) {
-      print("Error listening to orders from Firebase: $error");
+      print("Error listening to transaksi from Firebase: $error");
     });
   }
 
-  int getOrderQuantity(String itemName) {
-    try {
-      final existingOrder = _orders.firstWhere((order) => order.name == itemName);
-      return existingOrder.quantity;
-    } catch (e) {
-      return 0;
-    }
+  Future<void> addOrUpdateTransaksiFromOrder({
+    required app_order_model.Order orderItem,
+    required String idCustomer,
+    required String idMakananKatalog,
+    String? idOrderOverall,
+  }) async {
+    String transaksiId = _transaksiRef.push().key!;
+
+    double totalHargaItem = orderItem.price * orderItem.quantity;
+
+    Transaksi newTransaksi = Transaksi(
+      idTransaksi: transaksiId,
+      idOrder: idOrderOverall ?? transaksiId,
+      tanggalOrder: DateTime.now(),
+      idMakanan: idMakananKatalog,
+      namaMakanan: orderItem.name,
+      imagePath: orderItem.imagePath,
+      idCustomer: idCustomer,
+      hargaPerItem: orderItem.price,
+      jumlahItem: orderItem.quantity,
+      totalHargaItem: totalHargaItem,
+    );
+
+    // DEBUGGING: Tambahkan print sebelum mencoba menulis ke DB
+    print("Attempting to save Transaksi: ${newTransaksi.toJson()} with ID: $transaksiId");
+
+    await _transaksiRef.child(newTransaksi.idTransaksi!).set(newTransaksi.toJson()).then((_) {
+      print("Transaksi added/updated successfully for ${newTransaksi.namaMakanan}");
+    }).catchError((error) {
+      print("Error adding/updating transaksi to Firebase: $error");
+      // DEBUGGING: Print error secara lebih detail
+      if (error is FirebaseException) {
+        print("Firebase Error Code: ${error.code}");
+        print("Firebase Error Message: ${error.message}");
+      }
+    });
   }
 
-  void updateOrderQuantity(Order newOrder, int newQuantity) {
-    final String safeItemName = newOrder.name.replaceAll(RegExp(r'[.#$\[\]/]'), '_');
-
-    if (newQuantity <= 0) {
-      _ordersRef.child(safeItemName).remove().then((_) {
-        // Beri tahu UI secara langsung untuk update cepat, meskipun listener akan sync
-        // notifyListeners(); // Opsional, karena listener _ordersRef.onValue akan sync
-      }).catchError((error) {
-        print("Error removing order from Firebase: $error");
-      });
-    } else {
-      final Order orderToPersist = newOrder.copyWith(quantity: newQuantity);
-      _ordersRef.child(safeItemName).set(orderToPersist.toJson()).then((_) {
-        // Beri tahu UI secara langsung untuk update cepat, meskipun listener akan sync
-        // notifyListeners(); // Opsional, karena listener _ordersRef.onValue akan sync
-      }).catchError((error) {
-        print("Error updating/adding order to Firebase: $error");
-      });
-    }
-    // notifyListeners() tidak perlu dipanggil di sini setelah setiap operasi karena _listenToOrders yang akan melakukan refresh.
-    // Namun, jika Anda ingin respons UI yang sangat cepat sebelum data dari Firebase kembali, Anda bisa memanggilnya secara opsional di .then() dari operasi Firebase.
+  Future<void> removeTransaksi(String idTransaksi) async {
+    await _transaksiRef.child(idTransaksi).remove().then((_) {
+      print("Transaksi $idTransaksi removed successfully.");
+    }).catchError((error) {
+      print("Error removing transaksi from Firebase: $error");
+    });
   }
 
-  Future<void> clearAllOrders() async {
-    _orders.clear();
-    await _ordersRef.remove();
+  Future<void> clearAllTransaksi() async {
+    _transaksiItems.clear();
+    await _transaksiRef.remove();
     notifyListeners();
   }
 }

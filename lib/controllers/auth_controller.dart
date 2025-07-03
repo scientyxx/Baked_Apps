@@ -1,9 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart'; // Penting untuk ChangeNotifier
 
-class AuthController {
+class AuthController with ChangeNotifier { // Pastikan ada 'with ChangeNotifier'
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Getter untuk mendapatkan User yang sedang login
+  User? get currentUser => _auth.currentUser;
 
   // Register
   Future<UserCredential?> registerUser(String email, String password, String name, String address) async {
@@ -13,15 +17,15 @@ class AuthController {
         password: password,
       );
 
-      // Save user data to Firestore with 'customer' role
       if (userCredential.user != null) {
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'email': email,
           'name': name,
           'address': address,
-          'role': 'customer', // Tambahkan role 'customer' secara default
+          'role': 'customer',
         });
       }
+      notifyListeners(); // Beri tahu listener bahwa status mungkin berubah
       return userCredential;
     } on FirebaseAuthException catch (e) {
       String errorMessage;
@@ -49,10 +53,10 @@ class AuthController {
       if (userCredential.user != null) {
         DocumentSnapshot userDoc = await _firestore.collection('users').doc(userCredential.user!.uid).get();
         if (userDoc.exists) {
-          return userDoc.data() as Map<String, dynamic>; // Mengembalikan semua data user, termasuk role
+          notifyListeners(); // Beri tahu listener setelah login berhasil
+          return userDoc.data() as Map<String, dynamic>;
         } else {
-          // Kasus jika user terautentikasi tapi tidak ada di koleksi 'users' (jarang)
-          await _auth.signOut(); // Logout user karena data tidak lengkap
+          await _auth.signOut();
           throw Exception('User data not found in database. Please contact support.');
         }
       }
@@ -72,7 +76,12 @@ class AuthController {
     }
   }
 
-  // Mendapatkan peran pengguna saat ini
+  // Logout
+  Future<void> signOut() async {
+    await _auth.signOut();
+    notifyListeners(); // Beri tahu listener setelah logout
+  }
+
   Future<String?> getCurrentUserRole() async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -82,10 +91,5 @@ class AuthController {
       }
     }
     return null;
-  }
-
-  // Logout
-  Future<void> signOut() async {
-    await _auth.signOut();
   }
 }

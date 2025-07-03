@@ -1,38 +1,58 @@
-// lib/models/transaksi.dart
+
 
 class Transaksi {
-  final String? id; // Ubah ke String?
+  final String? idTransaksi; // ID unik untuk setiap baris transaksi di DB
+  final String idOrder; // ID pesanan secara keseluruhan (jika ingin grouping)
   final DateTime tanggalOrder;
-  final String idMakanan; // Ubah ke String
-  final String customerId; // Ubah ke String
-  final String kasaOrderId; // Ubah ke String
-  final double harga;
-  final int quantity;
+  final String idMakanan; // ID produk dari Katalog (Firestore ID)
+  final String namaMakanan; // Tambahan untuk kemudahan
+  final String? imagePath; // Tambahan untuk kemudahan
+  final String idCustomer;
+  final double hargaPerItem; // Harga satuan (sesuai diagram 'harga')
+  final int jumlahItem; // Kuantitas (sesuai diagram 'total_order')
+  final double totalHargaItem; // total_order: int di diagram (saya asumsikan total harga per item)
 
   Transaksi({
-    this.id,
+    this.idTransaksi,
+    required this.idOrder,
     required this.tanggalOrder,
     required this.idMakanan,
-    required this.customerId,
-    required this.kasaOrderId,
-    required this.harga,
-    required this.quantity,
+    required this.namaMakanan,
+    this.imagePath,
+    required this.idCustomer,
+    required this.hargaPerItem,
+    required this.jumlahItem,
+    required this.totalHargaItem,
   });
 
-  // ... copyWith ...
-
-  Map<String, dynamic> toJson() { // <--- PASTIKAN METHOD INI ADA
+  // Convert to JSON for Firebase Realtime Database
+  Map<String, dynamic> toJson() {
     return {
-      'tanggal_order': tanggalOrder.toIso8601String(),
+      'id_order': idOrder,
+      'tanggal_order': tanggalOrder.toIso8601String(), // Simpan sebagai string ISO 8601
       'id_makanan': idMakanan,
-      'customer_id': customerId,
-      'kasa_order_id': kasaOrderId,
-      'harga': harga,
-      'quantity': quantity,
+      'nama_makanan': namaMakanan,
+      'image_path': imagePath,
+      'id_customer': idCustomer,
+      'harga_per_item': hargaPerItem,
+      'jumlah_item': jumlahItem,
+      'total_harga_item': totalHargaItem,
     };
   }
 
-  // ... fromJson ...
-
-  double get subtotal => harga * quantity;
+  // Create from JSON (e.g., when reading from Firebase)
+  factory Transaksi.fromJson(Map<String, dynamic> json, String idTransaksi) {
+    return Transaksi(
+      idTransaksi: idTransaksi,
+      idOrder: json['id_order'] as String,
+      tanggalOrder: DateTime.parse(json['tanggal_order'] as String),
+      idMakanan: json['id_makanan'] as String,
+      namaMakanan: json['nama_makanan'] as String,
+      imagePath: json['image_path'] as String?,
+      idCustomer: json['id_customer'] as String,
+      hargaPerItem: (json['harga_per_item'] as num).toDouble(),
+      jumlahItem: json['jumlah_item'] as int,
+      totalHargaItem: (json['total_harga_item'] as num).toDouble(),
+    );
+  }
 }
