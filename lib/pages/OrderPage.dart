@@ -1,6 +1,6 @@
-import 'package:baked/controllers/order_controller.dart'; // Import OrderController
 import 'package:baked/models/order.dart';
 import 'package:baked/pages/QrCodePage.dart';
+import 'package:baked/providers/order_provider.dart'; // <--- PASTIKAN INI DIIMPORT!
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +11,7 @@ class OrderPage extends StatelessWidget {
       body: Column(
         children: [
           Container(
-            padding: EdgeInsets.only(right: 20, left: 15, top: 10),
+            padding: const EdgeInsets.only(right: 20, left: 15, top: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -24,8 +24,8 @@ class OrderPage extends StatelessWidget {
           ),
           Container(
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.symmetric(horizontal: 15),
-            child: Column(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -40,17 +40,17 @@ class OrderPage extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Consumer<OrderController>( // Gunakan OrderController
-              builder: (context, orderController, child) {
-                if (orderController.orders.isEmpty) {
-                  return Center(
-                    child: Text('No orders yet'),
+            child: Consumer<OrderProvider>( // <--- GUNAKAN OrderProvider DI SINI
+              builder: (context, orderProvider, child) { // <--- VARIABEL DIGANTI orderProvider
+                if (orderProvider.orders.isEmpty) { // <--- AKSES orders dari orderProvider
+                  return const Center(
+                    child: Text('No items in your cart.'), // Pesan yang lebih sesuai
                   );
                 }
                 return ListView.builder(
-                  itemCount: orderController.orders.length,
+                  itemCount: orderProvider.orders.length, // <--- AKSES orders dari orderProvider
                   itemBuilder: (context, index) {
-                    Order order = orderController.orders[index];
+                    Order order = orderProvider.orders[index]; // <--- AKSES orders dari orderProvider
                     return OrderItemWidget(order: order);
                   },
                 );
@@ -59,23 +59,31 @@ class OrderPage extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: Consumer<OrderController>( // Gunakan OrderController
-        builder: (context, orderController, child) {
-          if (orderController.orders.isNotEmpty) {
+      floatingActionButton: Consumer<OrderProvider>( // <--- GUNAKAN OrderProvider DI SINI
+        builder: (context, orderProvider, child) { // <--- VARIABEL DIGANTI orderProvider
+          if (orderProvider.orders.isNotEmpty) { // <--- AKSES orders dari orderProvider
             return FloatingActionButton.extended(
               onPressed: () {
+                // Saat Payment Now, Anda bisa mengirimkan data dari OrderProvider ke OrderController
+                // Misalnya:
+                // final orderController = Provider.of<OrderController>(context, listen: false);
+                // orderController.updateOrderQuantity(orderProvider.orders[0], orderProvider.orders[0].quantity); // Contoh pengiriman 1 item
+                // Atau lebih baik, buat method di OrderController untuk memproses seluruh keranjang:
+                // orderController.processCart(orderProvider.orders);
+                // orderProvider.clearCart(); // Kosongkan keranjang setelah diproses
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        QrCodePage(orders: orderController.orders),
+                        QrCodePage(orders: orderProvider.orders), // <--- Gunakan orders dari orderProvider
                   ),
                 );
               },
-              backgroundColor: Color.fromRGBO(195, 90, 45, 1),
+              backgroundColor: const Color.fromRGBO(195, 90, 45, 1),
               foregroundColor: Colors.white,
-              icon: Icon(Icons.qr_code),
-              label: Text('Payment Now'),
+              icon: const Icon(Icons.qr_code),
+              label: const Text('Payment Now'),
             );
           } else {
             return Container();
@@ -89,24 +97,25 @@ class OrderPage extends StatelessWidget {
 class OrderItemWidget extends StatelessWidget {
   final Order order;
 
-  OrderItemWidget({required this.order});
+  const OrderItemWidget({Key? key, required this.order}) : super(key: key);
 
   void _incrementQuantity(BuildContext context) {
-    Provider.of<OrderController>(context, listen: false) // Gunakan OrderController
+    // <--- GUNAKAN OrderProvider DI SINI
+    Provider.of<OrderProvider>(context, listen: false)
         .updateOrderQuantity(order, order.quantity + 1);
   }
 
   void _decrementQuantity(BuildContext context) {
-    // Memanggil updateOrderQuantity, akan menghapus jika kuantitas 0 atau kurang
-    Provider.of<OrderController>(context, listen: false).updateOrderQuantity(order, order.quantity - 1);
+    // <--- GUNAKAN OrderProvider DI SINI
+    Provider.of<OrderProvider>(context, listen: false).updateOrderQuantity(order, order.quantity - 1);
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(10),
+      margin: const EdgeInsets.all(10),
       child: Padding(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         child: Row(
           children: [
             order.imagePath != null && order.imagePath!.isNotEmpty
@@ -116,19 +125,19 @@ class OrderItemWidget extends StatelessWidget {
                     width: 50,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
-                        Icon(Icons.broken_image, size: 50),
+                        const Icon(Icons.broken_image, size: 50),
                   )
-                : Icon(Icons.image, size: 50),
-            SizedBox(width: 10),
+                : const Icon(Icons.image, size: 50),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     order.name,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     'Rp ${(order.price * order.quantity).toStringAsFixed(0)}',
                     style: TextStyle(color: Colors.grey[700]),
@@ -139,12 +148,12 @@ class OrderItemWidget extends StatelessWidget {
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove),
+                  icon: const Icon(Icons.remove),
                   onPressed: () => _decrementQuantity(context),
                 ),
                 Text(order.quantity.toString()),
                 IconButton(
-                  icon: Icon(Icons.add),
+                  icon: const Icon(Icons.add),
                   onPressed: () => _incrementQuantity(context),
                 ),
               ],

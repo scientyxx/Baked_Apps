@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'controllers/menu_controller.dart' as app_menu_controller;
-import 'controllers/order_controller.dart'; // PASTIKAN IMPORT INI KE order_controller.dart
+import 'controllers/order_controller.dart'; // Import OrderController
 import 'controllers/shift_controller.dart' as app_shift_controller;
 import 'firebase_options.dart';
 import 'pages/AdminMenuPage.dart';
@@ -18,7 +18,7 @@ import 'pages/Register2Page.dart';
 import 'pages/RegisterPage.dart';
 import 'pages/ShiftManagementPage.dart';
 import 'pages/StartingPage.dart';
-
+import 'providers/order_provider.dart'; // <--- TAMBAHKAN IMPORT INI
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,8 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => OrderController()), // Pastikan ini adalah OrderController
+        ChangeNotifierProvider(create: (_) => OrderProvider()), // <--- TAMBAHKAN INI (untuk keranjang)
+        ChangeNotifierProvider(create: (_) => OrderController()), // Ini untuk Realtime DB (sudah ada)
         ChangeNotifierProvider(create: (_) => app_menu_controller.MenuController()),
         ChangeNotifierProvider(create: (_) => app_shift_controller.ShiftController()),
       ],

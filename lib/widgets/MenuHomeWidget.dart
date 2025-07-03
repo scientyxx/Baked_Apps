@@ -28,15 +28,13 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
     if (mounted) {
       try {
         final orderProvider = Provider.of<OrderProvider>(context, listen: false);
-        if (quantity > 0) {
-          Order order = Order(
-            name: item.namaMakanan,
-            price: item.harga.toDouble(),
-            quantity: quantity,
-            imagePath: item.imagePath,
-          );
-          orderProvider.updateOrderQuantity(order, quantity);
-        }
+        Order order = Order( // Selalu buat objek Order baru atau copyWith
+          name: item.namaMakanan,
+          price: item.harga.toDouble(),
+          quantity: quantity,
+          imagePath: item.imagePath,
+        );
+        orderProvider.updateOrderQuantity(order, quantity);
       } catch (e) {
         print('Error updating cart: $e');
       }
@@ -91,9 +89,8 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
               ),
             ),
             const SizedBox(height: 10),
-            // Gunakan Container dengan height yang jelas
             Container(
-              height: 300,
+              height: 350, // Pastikan tinggi ini cukup untuk item Anda
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
@@ -140,56 +137,20 @@ class MenuHomeItemWidget extends StatefulWidget {
 class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
   int quantity = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateQuantity();
-    });
-  }
-
-  void _updateQuantity() {
-    if (mounted) {
-      try {
-        final orderProvider = Provider.of<OrderProvider>(context, listen: false);
-        final newQuantity = orderProvider.getOrderQuantity(widget.item.namaMakanan);
-        if (newQuantity != quantity) {
-          setState(() {
-            quantity = newQuantity;
-          });
-        }
-      } catch (e) {
-        print('Error getting quantity: $e');
-      }
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _updateQuantity();
-  }
-
-  void _incrementQuantity() {
-    if (mounted) {
-      setState(() {
-        quantity++;
-      });
-      widget.updateCart(widget.item, quantity);
-    }
-  }
-
-  void _decrementQuantity() {
-    if (quantity > 0 && mounted) {
-      setState(() {
-        quantity--;
-      });
-      widget.updateCart(widget.item, quantity);
-    }
-  }
+  // Hapus initState dan didChangeDependencies di sini
+  // Kita akan menggunakan Consumer untuk kuantitas
 
   @override
   Widget build(BuildContext context) {
+    // DENGAR PERUBAHAN ORDERPROVIDER LANGSUNG DI BUILD METHOD
+    final currentQuantity = Provider.of<OrderProvider>(context, listen: true)
+        .getOrderQuantity(widget.item.namaMakanan);
+
+    // Perbarui quantity lokal jika berbeda
+    if (currentQuantity != quantity) {
+      quantity = currentQuantity;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -206,7 +167,6 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image container dengan tinggi tetap
           Container(
             height: 100,
             width: double.infinity,
@@ -231,7 +191,6 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                     ),
             ),
           ),
-          // Content dengan Expanded
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
@@ -239,7 +198,6 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Text content
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,14 +222,17 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                       ],
                     ),
                   ),
-                  // Control buttons
                   Container(
                     height: 32,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         InkWell(
-                          onTap: _decrementQuantity,
+                          onTap: () {
+                            if (quantity > 0) {
+                              widget.updateCart(widget.item, quantity - 1);
+                            }
+                          },
                           child: Container(
                             width: 28,
                             height: 28,
@@ -294,7 +255,9 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                           ),
                         ),
                         InkWell(
-                          onTap: _incrementQuantity,
+                          onTap: () {
+                            widget.updateCart(widget.item, quantity + 1);
+                          },
                           child: Container(
                             width: 28,
                             height: 28,

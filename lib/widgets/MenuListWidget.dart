@@ -31,15 +31,13 @@ class _MenuListWidgetState extends State<MenuListWidget> {
     if (mounted) {
       try {
         final orderProvider = Provider.of<OrderProvider>(context, listen: false);
-        if (quantity > 0) {
-          Order order = Order(
-            name: item.namaMakanan,
-            price: item.harga.toDouble(),
-            quantity: quantity,
-            imagePath: item.imagePath,
-          );
-          orderProvider.updateOrderQuantity(order, quantity);
-        }
+        Order order = Order( // Selalu buat objek Order baru atau copyWith
+          name: item.namaMakanan,
+          price: item.harga.toDouble(),
+          quantity: quantity,
+          imagePath: item.imagePath,
+        );
+        orderProvider.updateOrderQuantity(order, quantity);
       } catch (e) {
         print('Error updating cart: $e');
       }
@@ -62,10 +60,9 @@ class _MenuListWidgetState extends State<MenuListWidget> {
           displayedItems = menuController.menuItems.take(widget.limit).toList();
         }
 
-        // Jika ada limit, gunakan Container dengan height tetap
         if (widget.limit > 0) {
           return Container(
-            height: 350,
+            height: 350, // Pastikan tinggi ini cukup untuk item Anda
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: GridView.builder(
               physics: const BouncingScrollPhysics(),
@@ -88,7 +85,6 @@ class _MenuListWidgetState extends State<MenuListWidget> {
           );
         }
 
-        // Untuk full list tanpa limit
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: GridView.builder(
@@ -135,62 +131,24 @@ class MenuItemWidget extends StatefulWidget {
 class _MenuItemWidgetState extends State<MenuItemWidget> {
   int quantity = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateQuantity();
-    });
-  }
-
-  void _updateQuantity() {
-    if (mounted) {
-      try {
-        final orderProvider = Provider.of<OrderProvider>(context, listen: false);
-        final newQuantity = orderProvider.getOrderQuantity(widget.item.namaMakanan);
-        if (newQuantity != quantity) {
-          setState(() {
-            quantity = newQuantity;
-          });
-        }
-      } catch (e) {
-        print('Error getting quantity: $e');
-        // Fallback ke 0 jika error
-        if (quantity != 0) {
-          setState(() {
-            quantity = 0;
-          });
-        }
-      }
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _updateQuantity();
-  }
-
-  void _incrementQuantity() {
-    if (mounted) {
-      setState(() {
-        quantity++;
-      });
-      widget.updateCart(widget.item, quantity);
-    }
-  }
-
-  void _decrementQuantity() {
-    if (quantity > 0 && mounted) {
-      setState(() {
-        quantity--;
-      });
-      widget.updateCart(widget.item, quantity);
-    }
-  }
+  // Hapus initState dan didChangeDependencies di sini
+  // Kita akan menggunakan Consumer untuk kuantitas
 
   @override
   Widget build(BuildContext context) {
+    // DENGAR PERUBAHAN ORDERPROVIDER LANGSUNG DI BUILD METHOD
+    final currentQuantity = Provider.of<OrderProvider>(context, listen: true)
+        .getOrderQuantity(widget.item.namaMakanan);
+
+    // Perbarui quantity lokal jika berbeda (ini akan memicu rebuild)
+    if (currentQuantity != quantity) {
+      // Penting: setState harus dipanggil di dalam build method hanya jika ada kondisi
+      // dan Anda mengelola state lokal yang didasarkan pada provider yang listened.
+      // Namun, lebih aman membiarkan Provider.of(listen: true) yang memicu rebuild
+      // dan quantity langsung menggunakan currentQuantity
+      quantity = currentQuantity; // update state lokal tanpa setState di build
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -205,9 +163,8 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Image container dengan tinggi tetap
           Container(
             height: 100,
             width: double.infinity,
@@ -232,7 +189,6 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                     ),
             ),
           ),
-          // Content dengan Expanded
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
@@ -240,7 +196,6 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Text content
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -268,14 +223,17 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                       ],
                     ),
                   ),
-                  // Control buttons
                   Container(
                     height: 32,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         InkWell(
-                          onTap: _decrementQuantity,
+                          onTap: () {
+                            if (quantity > 0) {
+                              widget.updateCart(widget.item, quantity - 1);
+                            }
+                          },
                           child: Container(
                             width: 28,
                             height: 28,
@@ -298,7 +256,9 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                           ),
                         ),
                         InkWell(
-                          onTap: _incrementQuantity,
+                          onTap: () {
+                            widget.updateCart(widget.item, quantity + 1);
+                          },
                           child: Container(
                             width: 28,
                             height: 28,
