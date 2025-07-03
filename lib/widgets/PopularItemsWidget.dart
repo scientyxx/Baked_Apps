@@ -1,5 +1,7 @@
-import 'package:baked/controllers/menu_controller.dart' as app_controller;
+import 'package:baked/controllers/menu_controller.dart' as app_menu_controller;
+import 'package:baked/controllers/order_controller.dart';
 import 'package:baked/models/katalog.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -16,16 +18,40 @@ class PopularItemsWidget extends StatelessWidget {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
 
-    return Consumer<app_controller.MenuController>(
-      builder: (context, menuController, child) {
+    return Consumer2<app_menu_controller.MenuController, OrderController>(
+      builder: (context, menuController, orderController, child) {
         if (menuController.menuItems.isEmpty) {
-          return const Center(child: Text("No popular items available."));
+          return const Center(child: Text("No menu items available."));
         }
 
-        final List<Katalog> bestSellerItems = menuController.menuItems.take(4).toList();
+        Map<String, int> mostSoldItemIds = orderController.getMostSoldItemIds();
+
+        List<MapEntry<String, int>> sortedSoldItems = mostSoldItemIds.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+        List<String> topSoldKatalogIds = sortedSoldItems
+            .take(4)
+            .map((entry) => entry.key)
+            .toList();
+
+        List<Katalog> bestSellerItems = [];
+        for (String idMakanan in topSoldKatalogIds) {
+          // --- PERBAIKI DI SINI: Gunakan firstWhereOrNull ---
+          Katalog? item = menuController.menuItems.firstWhereOrNull(
+            (katalogItem) => katalogItem.id == idMakanan,
+          );
+          if (item != null) {
+            bestSellerItems.add(item);
+          }
+        }
 
         if (bestSellerItems.isEmpty) {
-          return const Center(child: Text("No best seller items yet."));
+          bestSellerItems = menuController.menuItems.take(4).toList();
+          if (bestSellerItems.isEmpty) {
+             return const Center(child: Text("No best seller items yet."));
+          } else {
+             print("Falling back to first 4 menu items as no sales data.");
+          }
         }
 
         return Column(

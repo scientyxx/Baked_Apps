@@ -1,27 +1,31 @@
-import 'package:baked/controllers/menu_controller.dart' as app_controller;
-import 'package:baked/controllers/order_controller.dart' as app_order_controller; // Import OrderController
+// Tambahkan import yang dibutuhkan untuk semua halaman di routes
+import 'package:baked/pages/AdminMenuPage.dart'; // Tambahkan
+import 'package:baked/pages/ContinuePage.dart'; // Tambahkan
+import 'package:baked/pages/CoverPage.dart'; // Tambahkan
+import 'package:baked/pages/EditProfilePage.dart'; // Tambahkan
+import 'package:baked/pages/LoginPage.dart'; // Tambahkan
+import 'package:baked/pages/MenuManagementPage.dart'; // Tambahkan
 import 'package:baked/pages/MenuPage.dart';
 import 'package:baked/pages/OrderPage.dart';
 import 'package:baked/pages/ProfilePage.dart';
+import 'package:baked/pages/Register2Page.dart'; // Tambahkan
+import 'package:baked/pages/RegisterPage.dart'; // Tambahkan
+import 'package:baked/pages/ShiftManagementPage.dart'; // Tambahkan
+import 'package:baked/pages/StartingPage.dart'; // Tambahkan
 import 'package:baked/providers/order_provider.dart';
 import 'package:baked/widgets/MenuListWidget.dart';
 import 'package:baked/widgets/PopularItemsWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() {
-  // Pastikan Firebase.initializeApp() sudah dipanggil di main() aplikasi Anda
-  // contoh:
-  // WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp();
 
+void main() {
+  // main() ini ada di HomePage.dart, tapi harusnya dihapus atau dipindah ke main.dart utama
+  // Jika ini masih ada di HomePage.dart, ini adalah duplikasi.
+  // MyApp() ini akan digunakan di main.dart utama.
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => OrderProvider()),
-        ChangeNotifierProvider(create: (context) => app_controller.MenuController()),
-        ChangeNotifierProvider(create: (context) => app_order_controller.OrderController()), // Tambahkan OrderController
-      ],
+    ChangeNotifierProvider(
+      create: (context) => OrderProvider(),
       child: MyApp(),
     ),
   );
@@ -31,12 +35,27 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false, // Tambahkan ini
       title: 'Your App',
       theme: ThemeData(
         primarySwatch: Colors.orange,
-        textTheme: const TextTheme(),
+        textTheme: const TextTheme(), // Tambahkan const
       ),
-      home: HomePage(),
+      home: CoverPage(), // <--- Tetapkan CoverPage sebagai home awal
+      routes: { // <--- PINDAHKAN BLOK ROUTES KE SINI
+        "homepage": (context) => HomePage(), // Ini HomePage yang didefinisikan di bawah
+        "startingpage": (context) => StartingPage(),
+        "continuepage": (context) => ContinuePage(),
+        "loginpage": (context) => LoginPage(), // Ganti login.LoginPage()
+        "registerpage": (context) => RegisterPage(),
+        "register2page": (context) => Register2Page(),
+        "editprofilepage": (context) => EditProfilePageContent(),
+        "profilepage": (context) => ProfilePageContent(),
+        "admin_menu_page": (context) => AdminMenuPage(),
+        "menu_management_page": (context) => MenuManagementPage(),
+        "shift_management_page": (context) => ShiftManagementPage(),
+      },
+      debugShowMaterialGrid: false, // Tambahkan ini
     );
   }
 }
@@ -113,6 +132,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// ... (sisa HomePageContent tetap sama)
 class HomePageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -165,7 +185,7 @@ class HomePageContent extends StatelessWidget {
             child: const Row(
               children: [
                 Icon(Icons.search),
-                Expanded( // Menggunakan Expanded agar TextField mengisi ruang yang tersedia
+                Expanded(
                   child: Padding(
                     padding: EdgeInsets.only(left: 10),
                     child: TextField(

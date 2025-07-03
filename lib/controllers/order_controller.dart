@@ -57,14 +57,12 @@ class OrderController with ChangeNotifier {
       totalHargaItem: totalHargaItem,
     );
 
-    // DEBUGGING: Tambahkan print sebelum mencoba menulis ke DB
     print("Attempting to save Transaksi: ${newTransaksi.toJson()} with ID: $transaksiId");
 
     await _transaksiRef.child(newTransaksi.idTransaksi!).set(newTransaksi.toJson()).then((_) {
       print("Transaksi added/updated successfully for ${newTransaksi.namaMakanan}");
     }).catchError((error) {
       print("Error adding/updating transaksi to Firebase: $error");
-      // DEBUGGING: Print error secara lebih detail
       if (error is FirebaseException) {
         print("Firebase Error Code: ${error.code}");
         print("Firebase Error Message: ${error.message}");
@@ -85,4 +83,20 @@ class OrderController with ChangeNotifier {
     await _transaksiRef.remove();
     notifyListeners();
   }
+
+  // --- TAMBAHKAN METODE BARU INI ---
+  // Mengagregasi data transaksi untuk menemukan item paling populer
+  Map<String, int> getMostSoldItemIds() {
+    Map<String, int> soldQuantities = {};
+
+    for (var transaksi in _transaksiItems) {
+      soldQuantities.update(
+        transaksi.idMakanan, // Gunakan ID Makanan sebagai kunci
+        (value) => value + transaksi.jumlahItem,
+        ifAbsent: () => transaksi.jumlahItem,
+      );
+    }
+    return soldQuantities;
+  }
+  // ----------------------------------
 }

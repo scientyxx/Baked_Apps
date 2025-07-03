@@ -1,5 +1,7 @@
-import 'package:baked/controllers/user_controller.dart'; // Import UserController
+import 'package:baked/controllers/auth_controller.dart';
+import 'package:baked/controllers/user_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ProfilePageContent extends StatefulWidget {
   @override
@@ -15,12 +17,21 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    // Panggil _loadUserData hanya jika ada pengguna yang login
+    final authController = Provider.of<AuthController>(context, listen: false);
+    if (authController.currentUser != null) {
+      _loadUserData();
+    } else {
+      // Jika tidak ada user login, set data default
+      nameController.text = 'Please log in';
+      addressController.text = 'Please log in';
+    }
   }
 
   Future<void> _loadUserData() async {
     try {
-      Map<String, dynamic>? userData = await _userController.getUserData(); // Gunakan UserController
+      // Asumsi: getUserData di UserController sudah bisa mengambil UID dari AuthController internalnya atau menerimanya sebagai parameter.
+      Map<String, dynamic>? userData = await _userController.getUserData();
       if (userData != null) {
         setState(() {
           nameController.text = userData['name'] ?? '';
@@ -43,6 +54,9 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
 
   @override
   Widget build(BuildContext context) {
+    // Dapatkan instance AuthController
+    final authController = Provider.of<AuthController>(context); // Listen to changes in auth state
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
@@ -58,13 +72,13 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   bottom: 10,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       "Profile",
                       style: TextStyle(
                         fontSize: 35,
@@ -77,7 +91,7 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                         Navigator.pushReplacementNamed(
                             context, "editprofilepage");
                       },
-                      child: Text(
+                      child: const Text(
                         "Edit",
                         style: TextStyle(
                           fontSize: 16,
@@ -88,10 +102,10 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                   ],
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: nameController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Name',
                   labelStyle: TextStyle(color: Colors.black),
                   border: OutlineInputBorder(),
@@ -104,10 +118,10 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                 ),
                 readOnly: true,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: addressController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Address',
                   labelStyle: TextStyle(color: Colors.black),
                   border: OutlineInputBorder(),
@@ -119,6 +133,28 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                   ),
                 ),
                 readOnly: true,
+              ),
+              const SizedBox(height: 40),
+
+              // Tombol Logout Baru
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await authController.signOut(); // Panggil signOut dari AuthController
+                  // Arahkan ke halaman login menggunakan pushReplacementNamed
+                  Navigator.pushReplacementNamed(context, "loginpage");
+                },
+                icon: const Icon(Icons.logout, color: Colors.white),
+                label: const Text(
+                  "Logout",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFC35A2E),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
             ],
           ),
