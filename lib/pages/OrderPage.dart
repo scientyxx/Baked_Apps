@@ -1,6 +1,7 @@
+import 'package:baked/controllers/order_controller.dart';
 import 'package:baked/models/order.dart';
 import 'package:baked/pages/QrCodePage.dart';
-import 'package:baked/providers/order_provider.dart'; // <--- PASTIKAN INI DIIMPORT!
+import 'package:baked/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -40,17 +41,17 @@ class OrderPage extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Consumer<OrderProvider>( // <--- GUNAKAN OrderProvider DI SINI
-              builder: (context, orderProvider, child) { // <--- VARIABEL DIGANTI orderProvider
-                if (orderProvider.orders.isEmpty) { // <--- AKSES orders dari orderProvider
+            child: Consumer<OrderProvider>(
+              builder: (context, orderProvider, child) {
+                if (orderProvider.orders.isEmpty) {
                   return const Center(
-                    child: Text('No items in your cart.'), // Pesan yang lebih sesuai
+                    child: Text('No items in your cart.'),
                   );
                 }
                 return ListView.builder(
-                  itemCount: orderProvider.orders.length, // <--- AKSES orders dari orderProvider
+                  itemCount: orderProvider.orders.length,
                   itemBuilder: (context, index) {
-                    Order order = orderProvider.orders[index]; // <--- AKSES orders dari orderProvider
+                    Order order = orderProvider.orders[index];
                     return OrderItemWidget(order: order);
                   },
                 );
@@ -59,24 +60,35 @@ class OrderPage extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: Consumer<OrderProvider>( // <--- GUNAKAN OrderProvider DI SINI
-        builder: (context, orderProvider, child) { // <--- VARIABEL DIGANTI orderProvider
-          if (orderProvider.orders.isNotEmpty) { // <--- AKSES orders dari orderProvider
+      floatingActionButton: Consumer<OrderProvider>(
+        builder: (context, orderProvider, child) {
+          if (orderProvider.orders.isNotEmpty) {
             return FloatingActionButton.extended(
               onPressed: () {
-                // Saat Payment Now, Anda bisa mengirimkan data dari OrderProvider ke OrderController
-                // Misalnya:
-                // final orderController = Provider.of<OrderController>(context, listen: false);
-                // orderController.updateOrderQuantity(orderProvider.orders[0], orderProvider.orders[0].quantity); // Contoh pengiriman 1 item
-                // Atau lebih baik, buat method di OrderController untuk memproses seluruh keranjang:
-                // orderController.processCart(orderProvider.orders);
-                // orderProvider.clearCart(); // Kosongkan keranjang setelah diproses
+                // --- LOGIKA PENTING UNTUK MENGIRIM KE DATABASE ---
+                final orderController = Provider.of<OrderController>(context, listen: false);
 
+                // Loop melalui setiap item di keranjang OrderProvider
+                for (Order itemInCart in orderProvider.orders) {
+                  // Panggil updateOrderQuantity di OrderController untuk setiap item
+                  // Ini akan memicu penyimpanan ke Realtime Database
+                  orderController.updateOrderQuantity(itemInCart, itemInCart.quantity);
+                }
+
+                // Opsional: Setelah semua item dikirim ke DB, kosongkan keranjang lokal
+                // Ini dilakukan setelah data dikirim, bukan sebelum Navigator.push
+                orderProvider.clearCart();
+                // --- AKHIR LOGIKA PENTING ---
+
+                // Navigasi ke halaman QR Code
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        QrCodePage(orders: orderProvider.orders), // <--- Gunakan orders dari orderProvider
+                        // Penting: Jika QrCodePage perlu data yang baru dikirim,
+                        // Anda mungkin perlu mengirim salinan orderProvider.orders
+                        // SEBELUM clearCart, atau mengambilnya dari OrderController jika sudah di DB.
+                        QrCodePage(orders: List<Order>.from(orderProvider.orders)), // Kirim salinan jika dibutuhkan
                   ),
                 );
               },
@@ -100,13 +112,11 @@ class OrderItemWidget extends StatelessWidget {
   const OrderItemWidget({Key? key, required this.order}) : super(key: key);
 
   void _incrementQuantity(BuildContext context) {
-    // <--- GUNAKAN OrderProvider DI SINI
     Provider.of<OrderProvider>(context, listen: false)
         .updateOrderQuantity(order, order.quantity + 1);
   }
 
   void _decrementQuantity(BuildContext context) {
-    // <--- GUNAKAN OrderProvider DI SINI
     Provider.of<OrderProvider>(context, listen: false).updateOrderQuantity(order, order.quantity - 1);
   }
 
