@@ -1,6 +1,11 @@
+import 'package:baked/controllers/menu_controller.dart' as app_controller;
+import 'package:baked/models/katalog.dart';
+import 'package:baked/models/order.dart';
 import 'package:baked/pages/MenuPage.dart';
+import 'package:baked/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class MenuHomeWidget extends StatefulWidget {
   @override
@@ -8,52 +13,6 @@ class MenuHomeWidget extends StatefulWidget {
 }
 
 class _MenuHomeWidgetState extends State<MenuHomeWidget> {
-  final List<FoodItem> foodItems = [
-    FoodItem(
-      name: "Quiche Lorraine",
-      imagePath: "images/1.png",
-      price: 40000,
-    ),
-    FoodItem(
-      name: "Croissant Sandwich",
-      imagePath: "images/2.png",
-      price: 50000,
-    ),
-    FoodItem(
-      name: "Danish Pastry",
-      imagePath: "images/3.png",
-      price: 45000,
-    ),
-    FoodItem(
-      name: "Cinnamon Roll",
-      imagePath: "images/4.png",
-      price: 35000,
-    ),
-    FoodItem(
-      name: "Chocolate Cake",
-      imagePath: "images/5.png",
-      price: 55000,
-    ),
-    FoodItem(
-      name: "Blueberry Muffin",
-      imagePath: "images/6.png",
-      price: 30000,
-    ),
-    FoodItem(
-      name: "Baguette",
-      imagePath: "images/7.png",
-      price: 15000,
-    ),
-    FoodItem(
-      name: "Cheesecake",
-      imagePath: "images/8.png",
-      price: 48000,
-    ),
-  ];
-
-  Map<String, int> _cartItems = {};
-  int _totalCartItems = 0;
-
   String formatCurrency(double amount) {
     try {
       final formatCurrency =
@@ -65,211 +24,300 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
     }
   }
 
-  void addToCart(FoodItem foodItem, int quantity) {
-    if (quantity > 0) {
-      setState(() {
-        if (_cartItems.containsKey(foodItem.name)) {
-          _cartItems[foodItem.name] = _cartItems[foodItem.name]! + quantity;
-        } else {
-          _cartItems[foodItem.name] = quantity;
+  void updateCart(Katalog item, int quantity) {
+    if (mounted) {
+      try {
+        final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+        if (quantity > 0) {
+          Order order = Order(
+            name: item.namaMakanan,
+            price: item.harga.toDouble(),
+            quantity: quantity,
+            imagePath: item.imagePath,
+          );
+          orderProvider.updateOrderQuantity(order, quantity);
         }
-        _totalCartItems = getTotalCartItems(); // Update total cart items
-      });
+      } catch (e) {
+        print('Error updating cart: $e');
+      }
     }
-  }
-
-  // Metode untuk mendapatkan jumlah total item dalam keranjang
-  int getTotalCartItems() {
-    int total = 0;
-    _cartItems.forEach((key, value) {
-      total += value;
-    });
-    return total;
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+    return Consumer<app_controller.MenuController>(
+      builder: (context, menuController, child) {
+        if (menuController.menuItems.isEmpty) {
+          return const SizedBox(
+            height: 200,
+            child: Center(child: Text("No menu items available.")),
+          );
+        }
+
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Menu List",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Navigasi ke halaman MenuListWidget tanpa mengganti halaman saat ini
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MenuPageContent(),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    "See More",
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Menu List",
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(context).primaryColor,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: foodItems.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.75,
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MenuPageContent(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "See More",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              itemBuilder: (context, index) {
-                return MenuItemWidget(
-                  foodItem: foodItems[index],
-                  formatCurrency: formatCurrency,
-                  addToCart: addToCart,
-                );
-              },
+            ),
+            const SizedBox(height: 10),
+            // Gunakan Container dengan height yang jelas
+            Container(
+              height: 300,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: GridView.builder(
+                physics: const BouncingScrollPhysics(),
+                itemCount: menuController.menuItems.length > 4 ? 4 : menuController.menuItems.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.85,
+                ),
+                itemBuilder: (context, index) {
+                  return MenuHomeItemWidget(
+                    key: ValueKey(menuController.menuItems[index].namaMakanan),
+                    item: menuController.menuItems[index],
+                    formatCurrency: formatCurrency,
+                    updateCart: updateCart,
+                  );
+                },
+              ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
-class MenuItemWidget extends StatefulWidget {
-  final FoodItem foodItem;
+class MenuHomeItemWidget extends StatefulWidget {
+  final Katalog item;
   final String Function(double) formatCurrency;
-  final void Function(FoodItem, int) addToCart;
+  final void Function(Katalog, int) updateCart;
 
-  MenuItemWidget({
-    required this.foodItem,
+  const MenuHomeItemWidget({
+    Key? key,
+    required this.item,
     required this.formatCurrency,
-    required this.addToCart,
-  });
+    required this.updateCart,
+  }) : super(key: key);
 
   @override
-  _MenuItemWidgetState createState() => _MenuItemWidgetState();
+  _MenuHomeItemWidgetState createState() => _MenuHomeItemWidgetState();
 }
 
-class _MenuItemWidgetState extends State<MenuItemWidget> {
+class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
   int quantity = 0;
 
-  void _incrementQuantity() {
-    setState(() {
-      quantity++;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateQuantity();
     });
-    widget.addToCart(widget.foodItem, 1);
+  }
+
+  void _updateQuantity() {
+    if (mounted) {
+      try {
+        final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+        final newQuantity = orderProvider.getOrderQuantity(widget.item.namaMakanan);
+        if (newQuantity != quantity) {
+          setState(() {
+            quantity = newQuantity;
+          });
+        }
+      } catch (e) {
+        print('Error getting quantity: $e');
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateQuantity();
+  }
+
+  void _incrementQuantity() {
+    if (mounted) {
+      setState(() {
+        quantity++;
+      });
+      widget.updateCart(widget.item, quantity);
+    }
   }
 
   void _decrementQuantity() {
-    if (quantity > 0) {
+    if (quantity > 0 && mounted) {
       setState(() {
         quantity--;
       });
-      widget.addToCart(widget.foodItem, -1);
+      widget.updateCart(widget.item, quantity);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: ClipRRect(
+          // Image container dengan tinggi tetap
+          Container(
+            height: 100,
+            width: double.infinity,
+            decoration: const BoxDecoration(
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.asset(
-                widget.foodItem.imagePath,
-                width: 150,
-                fit: BoxFit.cover,
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: widget.item.imagePath != null && widget.item.imagePath!.isNotEmpty
+                  ? Image.asset(
+                      'images/${widget.item.imagePath}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.broken_image, size: 40),
+                          ),
+                    )
+                  : Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image, size: 40),
+                    ),
+            ),
+          ),
+          // Content dengan Expanded
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Text content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.item.namaMakanan,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.formatCurrency(widget.item.harga),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Control buttons
+                  Container(
+                    height: 32,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        InkWell(
+                          onTap: _decrementQuantity,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.remove,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          quantity.toString(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: _incrementQuantity,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.foodItem.name,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4),
-                Text(
-                  widget.formatCurrency(widget.foodItem.price),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.remove),
-                  onPressed: _decrementQuantity,
-                  color: Theme.of(context).primaryColor,
-                ),
-                Text(
-                  quantity.toString(),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: _incrementQuantity,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ],
             ),
           ),
         ],
       ),
     );
   }
-}
-
-class FoodItem {
-  final String name;
-  final String imagePath;
-  final double price;
-
-  FoodItem({
-    required this.name,
-    required this.imagePath,
-    required this.price,
-  });
 }

@@ -1,14 +1,13 @@
-import 'dart:convert';
-
+// import 'dart:convert'; // Tidak lagi diperlukan
 import 'package:baked/models/order.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http; // Tidak lagi diperlukan
 
 class OrderProvider with ChangeNotifier {
   List<Order> _orders = [];
-  final String firebaseUrl =
-      'https://bakedapps-dfda2-default-rtdb.firebaseio.com/';
-  final String firebaseToken = 'AIzaSyDW88BGk2cXVfTTUmp4X7pFuPeKz0eLA3E';
+  // Hapus properti firebaseUrl dan firebaseToken
+  // final String firebaseUrl = 'https://bakedapps-dfda2-default-rtdb.firebaseio.com/';
+  // final String firebaseToken = 'AIzaSyDW88BGk2cXVfTTUmp4X7pFuPeKz0eLA3E';
 
   List<Order> get orders => _orders;
 
@@ -20,15 +19,13 @@ class OrderProvider with ChangeNotifier {
       _orders.add(order);
     }
     notifyListeners();
-
-    _addToFirebase(order);
+    // Hapus pemanggilan ke metode Firebase
   }
 
   void removeOrder(Order order) {
     _orders.removeWhere((o) => o.name == order.name);
     notifyListeners();
-
-    _removeFromFirebase(order);
+    // Hapus pemanggilan ke metode Firebase
   }
 
   int getOrderQuantity(String name) {
@@ -41,60 +38,24 @@ class OrderProvider with ChangeNotifier {
 
   void updateOrderQuantity(Order order, int newQuantity) {
     int index = _orders.indexWhere((o) => o.name == order.name);
-    if (index >= 0 && newQuantity > 0) {
-      _orders[index] = order.copyWith(quantity: newQuantity);
-    } else if (index >= 0 && newQuantity <= 0) {
-      _orders.removeAt(index);
+    if (index >= 0) {
+      if (newQuantity > 0) {
+        _orders[index] = order.copyWith(quantity: newQuantity);
+      } else {
+        _orders.removeAt(index);
+      }
+      notifyListeners();
+    } else if (newQuantity > 0) {
+      _orders.add(order.copyWith(quantity: newQuantity));
+      notifyListeners();
     }
+    // Hapus pemanggilan ke metode Firebase
+  }
+
+  void clearCart() {
+    _orders.clear();
     notifyListeners();
-
-    _updateInFirebase(order.copyWith(quantity: newQuantity));
   }
 
-  Future<void> _addToFirebase(Order order) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$firebaseUrl/orders.json?auth=$firebaseToken'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(order.toJson()),
-      );
-      if (response.statusCode != 200) {
-        throw Exception('Failed to add order');
-      }
-    } catch (error) {
-      print('Error adding order to Firebase: $error');
-    }
-  }
-
-  Future<void> _removeFromFirebase(Order order) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$firebaseUrl/orders/${order.name}.json?auth=$firebaseToken'),
-      );
-      if (response.statusCode != 200) {
-        throw Exception('Failed to remove order');
-      }
-    } catch (error) {
-      print('Error removing order from Firebase: $error');
-    }
-  }
-
-  Future<void> _updateInFirebase(Order order) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$firebaseUrl/orders/${order.name}.json?auth=$firebaseToken'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(order.toJson()),
-      );
-      if (response.statusCode != 200) {
-        throw Exception('Failed to update order');
-      }
-    } catch (error) {
-      print('Error updating order in Firebase: $error');
-    }
-  }
+  // Hapus semua metode _addToFirebase, _removeFromFirebase, _updateInFirebase
 }

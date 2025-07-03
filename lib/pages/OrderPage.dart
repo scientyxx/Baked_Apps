@@ -1,6 +1,6 @@
+import 'package:baked/controllers/order_controller.dart'; // Import OrderController
 import 'package:baked/models/order.dart';
 import 'package:baked/pages/QrCodePage.dart';
-import 'package:baked/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,9 +8,6 @@ class OrderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('Your Orders'),
-      // ),
       body: Column(
         children: [
           Container(
@@ -43,17 +40,17 @@ class OrderPage extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Consumer<OrderProvider>(
-              builder: (context, orderProvider, child) {
-                if (orderProvider.orders.isEmpty) {
+            child: Consumer<OrderController>( // Gunakan OrderController
+              builder: (context, orderController, child) {
+                if (orderController.orders.isEmpty) {
                   return Center(
                     child: Text('No orders yet'),
                   );
                 }
                 return ListView.builder(
-                  itemCount: orderProvider.orders.length,
+                  itemCount: orderController.orders.length,
                   itemBuilder: (context, index) {
-                    Order order = orderProvider.orders[index];
+                    Order order = orderController.orders[index];
                     return OrderItemWidget(order: order);
                   },
                 );
@@ -62,20 +59,20 @@ class OrderPage extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: Consumer<OrderProvider>(
-        builder: (context, orderProvider, child) {
-          if (orderProvider.orders.isNotEmpty) {
+      floatingActionButton: Consumer<OrderController>( // Gunakan OrderController
+        builder: (context, orderController, child) {
+          if (orderController.orders.isNotEmpty) {
             return FloatingActionButton.extended(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        QrCodePage(orders: orderProvider.orders),
+                        QrCodePage(orders: orderController.orders),
                   ),
                 );
               },
-              backgroundColor: Color(0xFFC35A2E),
+              backgroundColor: Color.fromRGBO(195, 90, 45, 1),
               foregroundColor: Colors.white,
               icon: Icon(Icons.qr_code),
               label: Text('Payment Now'),
@@ -95,17 +92,13 @@ class OrderItemWidget extends StatelessWidget {
   OrderItemWidget({required this.order});
 
   void _incrementQuantity(BuildContext context) {
-    Provider.of<OrderProvider>(context, listen: false)
+    Provider.of<OrderController>(context, listen: false) // Gunakan OrderController
         .updateOrderQuantity(order, order.quantity + 1);
   }
 
   void _decrementQuantity(BuildContext context) {
-    if (order.quantity > 1) {
-      Provider.of<OrderProvider>(context, listen: false)
-          .updateOrderQuantity(order, order.quantity - 1);
-    } else {
-      Provider.of<OrderProvider>(context, listen: false).removeOrder(order);
-    }
+    // Memanggil updateOrderQuantity, akan menghapus jika kuantitas 0 atau kurang
+    Provider.of<OrderController>(context, listen: false).updateOrderQuantity(order, order.quantity - 1);
   }
 
   @override
@@ -116,13 +109,16 @@ class OrderItemWidget extends StatelessWidget {
         padding: EdgeInsets.all(10),
         child: Row(
           children: [
-            // Uncomment this line if you have images in your assets
-            // Image.asset(
-            //   order.imagePath,
-            //   height: 50,
-            //   width: 50,
-            //   fit: BoxFit.cover,
-            // ),
+            order.imagePath != null && order.imagePath!.isNotEmpty
+                ? Image.asset(
+                    'images/${order.imagePath!}',
+                    height: 50,
+                    width: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.broken_image, size: 50),
+                  )
+                : Icon(Icons.image, size: 50),
             SizedBox(width: 10),
             Expanded(
               child: Column(

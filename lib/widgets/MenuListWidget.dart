@@ -1,3 +1,5 @@
+import 'package:baked/controllers/menu_controller.dart' as app_controller;
+import 'package:baked/models/katalog.dart';
 import 'package:baked/models/order.dart';
 import 'package:baked/providers/order_provider.dart';
 import 'package:flutter/material.dart';
@@ -7,66 +9,13 @@ import 'package:provider/provider.dart';
 class MenuListWidget extends StatefulWidget {
   final int limit;
 
-  MenuListWidget({this.limit = 10});
+  const MenuListWidget({Key? key, this.limit = 0}) : super(key: key);
 
   @override
   _MenuListWidgetState createState() => _MenuListWidgetState();
 }
 
 class _MenuListWidgetState extends State<MenuListWidget> {
-  final List<FoodItem> foodItems = [
-    FoodItem(
-      name: "Apple Pie",
-      imagePath: "images/1.png",
-      price: 40000,
-    ),
-    FoodItem(
-      name: "Fruit Tart",
-      imagePath: "images/2.png",
-      price: 45000,
-    ),
-    FoodItem(
-      name: "Danish Pastry",
-      imagePath: "images/3.png",
-      price: 30000,
-    ),
-    FoodItem(
-      name: "Cheese Puff Pastry",
-      imagePath: "images/4.png",
-      price: 35000,
-    ),
-    FoodItem(
-      name: "Cinnamon Roll",
-      imagePath: "images/5.png",
-      price: 45000,
-    ),
-    FoodItem(
-      name: "Blueberry Danish",
-      imagePath: "images/6.png",
-      price: 35000,
-    ),
-    FoodItem(
-      name: "Chicken Puff Isolated",
-      imagePath: "images/7.png",
-      price: 35000,
-    ),
-    FoodItem(
-      name: "Croissant Sandwich",
-      imagePath: "images/8.png",
-      price: 50000,
-    ),
-    FoodItem(
-      name: "Quiche Lorraine",
-      imagePath: "images/9.png",
-      price: 40000,
-    ),
-    FoodItem(
-      name: "Classic Cheesecake",
-      imagePath: "images/10.png",
-      price: 45000,
-    ),
-  ];
-
   String formatCurrency(double amount) {
     try {
       final formatCurrency =
@@ -78,69 +27,106 @@ class _MenuListWidgetState extends State<MenuListWidget> {
     }
   }
 
-  void updateCart(FoodItem foodItem, int quantity) {
-    if (quantity != 0) {
-      Order order = Order(
-        name: foodItem.name,
-        price: foodItem.price.toDouble(),
-        quantity: quantity,
-        imagePath: foodItem.imagePath,
-      );
-      if (quantity > 0) {
-        Provider.of<OrderProvider>(context, listen: false).addOrder(order);
-      } else {
-        Provider.of<OrderProvider>(context, listen: false).removeOrder(order);
+  void updateCart(Katalog item, int quantity) {
+    if (mounted) {
+      try {
+        final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+        if (quantity > 0) {
+          Order order = Order(
+            name: item.namaMakanan,
+            price: item.harga.toDouble(),
+            quantity: quantity,
+            imagePath: item.imagePath,
+          );
+          orderProvider.updateOrderQuantity(order, quantity);
+        }
+      } catch (e) {
+        print('Error updating cart: $e');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    int displayLimit = widget.limit;
-    List<FoodItem> limitedFoodItems = foodItems.take(displayLimit).toList();
+    return Consumer<app_controller.MenuController>(
+      builder: (context, menuController, child) {
+        if (menuController.menuItems.isEmpty) {
+          return const SizedBox(
+            height: 200,
+            child: Center(child: Text("No menu items available.")),
+          );
+        }
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 5),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: limitedFoodItems.length, //
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        List<Katalog> displayedItems = menuController.menuItems;
+        if (widget.limit > 0 && menuController.menuItems.length > widget.limit) {
+          displayedItems = menuController.menuItems.take(widget.limit).toList();
+        }
+
+        // Jika ada limit, gunakan Container dengan height tetap
+        if (widget.limit > 0) {
+          return Container(
+            height: 350,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: GridView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: displayedItems.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.85,
               ),
               itemBuilder: (context, index) {
                 return MenuItemWidget(
-                  foodItem: limitedFoodItems[index],
+                  key: ValueKey(displayedItems[index].namaMakanan),
+                  item: displayedItems[index],
                   formatCurrency: formatCurrency,
                   updateCart: updateCart,
                 );
               },
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        // Untuk full list tanpa limit
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: displayedItems.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.85,
+            ),
+            itemBuilder: (context, index) {
+              return MenuItemWidget(
+                key: ValueKey(displayedItems[index].namaMakanan),
+                item: displayedItems[index],
+                formatCurrency: formatCurrency,
+                updateCart: updateCart,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
 
 class MenuItemWidget extends StatefulWidget {
-  final FoodItem foodItem;
+  final Katalog item;
   final String Function(double) formatCurrency;
-  final void Function(FoodItem, int) updateCart;
+  final void Function(Katalog, int) updateCart;
 
-  MenuItemWidget({
-    required this.foodItem,
+  const MenuItemWidget({
+    Key? key,
+    required this.item,
     required this.formatCurrency,
     required this.updateCart,
-  });
+  }) : super(key: key);
 
   @override
   _MenuItemWidgetState createState() => _MenuItemWidgetState();
@@ -150,152 +136,192 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
   int quantity = 0;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    quantity = Provider.of<OrderProvider>(context, listen: false)
-        .getOrderQuantity(widget.foodItem.name);
-  }
-
-  void _incrementQuantity() {
-    setState(() {
-      quantity++;
-      widget.updateCart(widget.foodItem, quantity);
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateQuantity();
     });
   }
 
-  void _decrementQuantity() {
-    if (quantity > 0) {
-      setState(() {
-        quantity--;
-        widget.updateCart(widget.foodItem, quantity);
-      });
+  void _updateQuantity() {
+    if (mounted) {
+      try {
+        final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+        final newQuantity = orderProvider.getOrderQuantity(widget.item.namaMakanan);
+        if (newQuantity != quantity) {
+          setState(() {
+            quantity = newQuantity;
+          });
+        }
+      } catch (e) {
+        print('Error getting quantity: $e');
+        // Fallback ke 0 jika error
+        if (quantity != 0) {
+          setState(() {
+            quantity = 0;
+          });
+        }
+      }
     }
   }
 
-  void _showConfirmationDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Confirm Add to Cart'),
-          content:
-              Text('Add ${widget.foodItem.name} (Qty: $quantity) to cart?'),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              child: Text('Add to Cart'),
-              onPressed: () {
-                widget.updateCart(widget.foodItem, quantity);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateQuantity();
+  }
+
+  void _incrementQuantity() {
+    if (mounted) {
+      setState(() {
+        quantity++;
+      });
+      widget.updateCart(widget.item, quantity);
+    }
+  }
+
+  void _decrementQuantity() {
+    if (quantity > 0 && mounted) {
+      setState(() {
+        quantity--;
+      });
+      widget.updateCart(widget.item, quantity);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: ClipRRect(
+          // Image container dengan tinggi tetap
+          Container(
+            height: 100,
+            width: double.infinity,
+            decoration: const BoxDecoration(
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.asset(
-                widget.foodItem.imagePath,
-                width: 150,
-                fit: BoxFit.cover,
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: widget.item.imagePath != null && widget.item.imagePath!.isNotEmpty
+                  ? Image.asset(
+                      'images/${widget.item.imagePath}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.broken_image, size: 40),
+                          ),
+                    )
+                  : Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image, size: 40),
+                    ),
+            ),
+          ),
+          // Content dengan Expanded
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Text content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.item.namaMakanan,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.formatCurrency(
+                              widget.item.harga * (quantity > 0 ? quantity : 1)),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[700],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Control buttons
+                  Container(
+                    height: 32,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        InkWell(
+                          onTap: _decrementQuantity,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC35A2E),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.remove,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          quantity.toString(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: _incrementQuantity,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC35A2E),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  widget.foodItem.name,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.left,
-                ),
-                SizedBox(height: 0),
-                Text(
-                  widget.formatCurrency(
-                      widget.foodItem.price * (quantity > 0 ? quantity : 1)),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                  textAlign: TextAlign.left,
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.remove),
-                  onPressed: _decrementQuantity,
-                  color: Color(0xFFC35A2E),
-                ),
-                Text(
-                  quantity.toString(),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: _incrementQuantity,
-                  color: Color(0xFFC35A2E),
-                ),
-              ],
-            ),
-          ),
-          // Center(
-          //   child: Padding(
-          //     padding: const EdgeInsets.all(8.0),
-          //     child: ElevatedButton(
-          //       onPressed: _showConfirmationDialog,
-          //       child: Text('Add to Cart'),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );
   }
-}
-
-class FoodItem {
-  final String name;
-  final String imagePath;
-  final double price;
-
-  FoodItem({
-    required this.name,
-    required this.imagePath,
-    required this.price,
-  });
 }

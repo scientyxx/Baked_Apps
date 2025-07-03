@@ -1,46 +1,47 @@
-import 'package:baked/controllers/auth_controller.dart'; // Import AuthController
-import 'package:baked/pages/HomePage copy.dart'; // Ini mungkin harusnya HomePage.dart
+import 'package:baked/pages/HomePage%20copy.dart';
 import 'package:baked/pages/RegisterPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 class Register2Page extends StatelessWidget {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
-  final AuthController _authController = AuthController(); // Inisialisasi AuthController
-
   @override
   Widget build(BuildContext context) {
-    // _obscureText seharusnya di StatefullWidget jika ingin di-toggle
+    TextEditingController nameController = TextEditingController();
+    TextEditingController addressController = TextEditingController();
+    bool _obscureText = true;
 
     void registerAndSaveUserData(BuildContext context) async {
       try {
-        // Ambil email dan password dari RegisterPage (asumsi disimpan atau diteruskan)
-        // Untuk contoh ini, saya asumsikan email dan password didapatkan dari suatu tempat
-        // Misalnya, dari route arguments jika diteruskan dari RegisterPage
-        final Map<String, String>? args = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
-        final String? email = args?['email'];
-        final String? password = args?['password'];
-
-        if (email == null || password == null) {
-          throw Exception('Email or password is missing from previous registration step.');
+        User? user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          print("User ID: ${user.uid}");
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .set({
+            'name': nameController.text,
+            'address': addressController.text,
+            // Tambahkan data lainnya sesuai kebutuhan
+          });
+          print("Data successfully saved to Firestore");
+          // Jika berhasil, lanjutkan navigasi ke halaman beranda atau lakukan tindakan sesuai kebutuhan aplikasi Anda.
+          Navigator.pushReplacementNamed(context, "homepage");
+        } else {
+          // Handle error jika user null (meskipun seharusnya tidak terjadi dalam konteks ini)
+          print("User is null");
         }
-
-        await _authController.registerUser(
-          email,
-          password,
-          nameController.text,
-          addressController.text,
-        );
-        print("Data successfully saved to Firestore");
-        Navigator.pushReplacementNamed(context, "homepage");
       } catch (e) {
+        // Handle error registration here.
         print("Error: $e");
+        // Tampilkan pesan kesalahan kepada pengguna jika diperlukan.
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text("Error"),
-              content: Text(e.toString()), // Menampilkan pesan kesalahan dari controller
+              content: Text("Failed to register. Please try again later."),
               actions: <Widget>[
                 TextButton(
                   child: Text("OK"),
@@ -143,4 +144,15 @@ class Register2Page extends StatelessWidget {
   }
 }
 
-// Main di Register2Page dihapus karena sudah ada di main.dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Register2Page(),
+    routes: {
+      "homepage": (context) => HomePage(),
+      "registerpage": (context) => RegisterPage(),
+    },
+  ));
+}

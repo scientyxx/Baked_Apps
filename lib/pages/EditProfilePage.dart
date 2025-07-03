@@ -1,5 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:baked/controllers/user_controller.dart'; // Import UserController
 import 'package:flutter/material.dart';
 
 class EditProfilePageContent extends StatefulWidget {
@@ -11,8 +10,7 @@ class _EditProfilePageContentState extends State<EditProfilePageContent> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController nameController = TextEditingController();
   TextEditingController addressController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final UserController _userController = UserController(); // Inisialisasi UserController
 
   @override
   void initState() {
@@ -21,29 +19,41 @@ class _EditProfilePageContentState extends State<EditProfilePageContent> {
   }
 
   Future<void> _loadUserData() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      DocumentSnapshot userDoc =
-          await _firestore.collection('users').doc(user.uid).get();
-
-      if (userDoc.exists) {
+    try {
+      Map<String, dynamic>? userData = await _userController.getUserData(); // Gunakan UserController
+      if (userData != null) {
         setState(() {
-          nameController.text = userDoc['name'] ?? '';
-          addressController.text = userDoc['address'] ?? '';
+          nameController.text = userData['name'] ?? '';
+          addressController.text = userData['address'] ?? '';
         });
       } else {
-        // Handle case when document does not exist
+        // Handle case when document does not exist or user not logged in
         setState(() {
           nameController.text = '';
           addressController.text = '';
         });
       }
-    } else {
-      // Handle case when user is not logged in
-      setState(() {
-        nameController.text = '';
-        addressController.text = '';
-      });
+    } catch (e) {
+      print('Error loading user data for edit: $e');
+    }
+  }
+
+  Future<void> _saveUserData() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        await _userController.updateUserData(
+          nameController.text,
+          addressController.text,
+        ); // Gunakan UserController
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile updated successfully!')),
+        );
+        Navigator.pushReplacementNamed(context, "profilepage"); // Navigasi ke halaman profil
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update profile: $e')),
+        );
+      }
     }
   }
 
@@ -120,23 +130,7 @@ class _EditProfilePageContentState extends State<EditProfilePageContent> {
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      // Simpan perubahan ke Firestore
-                      User? user = _auth.currentUser;
-                      if (user != null) {
-                        await _firestore
-                            .collection('users')
-                            .doc(user.uid)
-                            .update({
-                          'name': nameController.text,
-                          'address': addressController.text,
-                        });
-                        // Kembali ke halaman profil setelah menyimpan
-                        Navigator.pushReplacementNamed(context, "homepage");
-                      }
-                    }
-                  },
+                  onPressed: _saveUserData,
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(
                       MediaQuery.of(context).size.width,

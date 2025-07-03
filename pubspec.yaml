@@ -43,6 +43,8 @@ dependencies:
   firebase_auth: ^5.1.1
   cloud_firestore: ^5.0.2
   http: ^0.13.4
+  image_picker: ^1.1.0
+  firebase_storage: ^12.1.0
   
   
 
@@ -67,22 +69,23 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - images/
-    - images/1.png
-    - images/2.png
-    - images/3.png
-    - images/4.png
-    - images/5.png
-    - images/6.png
-    - images/7.png
-    - images/8.png
-    - images/9.png
-    - images/10.png
-    - images/11.png
-    - images/12.png
-    - images/15.png
-    - images/best_seller/
-    - images/snapshoot/
-  #   - images/a_dot_ham.jpeg
+    - images/best_seller/ 
+    # - images/1.png
+    # - images/2.png
+    # - images/3.png
+    # - images/4.png
+    # - images/5.png
+    # - images/6.png
+    # - images/7.png
+    # - images/8.png
+    # - images/9.png
+    # - images/10.png
+    # - images/11.png
+    # - images/12.png
+    # - images/15.png
+    # - images/best_seller/
+    # - images/snapshoot/
+    # - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

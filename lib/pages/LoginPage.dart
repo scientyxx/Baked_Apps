@@ -1,3 +1,4 @@
+import 'package:baked/controllers/auth_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +13,8 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscureText = true;
   String _errorMessage = '';
 
+  final AuthController _authController = AuthController();
+
   void _togglePasswordVisibility() {
     setState(() {
       _obscureText = !_obscureText;
@@ -19,33 +22,77 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _signInWithEmailAndPassword() async {
+    setState(() {
+      _errorMessage = '';
+    });
     try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+      Map<String, dynamic>? userData = await _authController.loginUser( // Tangkap userData
+        emailController.text.trim(),
+        passwordController.text.trim(),
       );
-      Navigator.pushReplacementNamed(context, "homepage");
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        setState(() {
-          _errorMessage = 'No user found for that email.';
-        });
-      } else if (e.code == 'wrong-password') {
-        setState(() {
-          _errorMessage = 'Wrong password provided for that user.';
-        });
+
+      if (userData != null) {
+        String? userRole = userData['role']; // Ambil role dari data
+        if (userRole == 'kasir' || userRole == 'admin') {
+          // Arahkan ke halaman admin/kasir
+          Navigator.pushReplacementNamed(context, "admin_menu_page"); // Rute baru
+        } else {
+          // Default ke halaman customer
+          Navigator.pushReplacementNamed(context, "homepage");
+        }
       } else {
         setState(() {
-          _errorMessage = 'An error occurred. Please try again.';
+          _errorMessage = 'Login failed: User data not found.';
         });
-        print('Error: ${e.message}');
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'An error occurred. Please try again.';
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
       });
-      print('Error: ${e.toString()}');
+      print('Error: $e');
+    }
+  }
+
+  Future<void> _sendPasswordResetEmail() async {
+    setState(() {
+      _errorMessage = '';
+    });
+    if (emailController.text.trim().isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter your email to reset password.';
+      });
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text.trim());
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Password Reset Email Sent"),
+            content: Text("A password reset link has been sent to ${emailController.text.trim()}. Please check your inbox."),
+            actions: <Widget>[
+              TextButton(
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message ?? 'Failed to send password reset email.';
+      });
+      print('Error sending password reset email: $e');
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'An unknown error occurred: $e';
+      });
+      print('Error sending password reset email: $e');
     }
   }
 
@@ -116,7 +163,17 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            SizedBox(height: 50),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _sendPasswordResetEmail,
+                child: Text(
+                  'Forgot Password?',
+                  style: TextStyle(color: Color(0xFFC35A2E)),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
             InkWell(
               onTap: _signInWithEmailAndPassword,
               child: Container(
@@ -149,20 +206,6 @@ class _LoginPageState extends State<LoginPage> {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Home Page"),
-      ),
-      body: Center(
-        child: Text("Welcome to the Home Page!"),
       ),
     );
   }

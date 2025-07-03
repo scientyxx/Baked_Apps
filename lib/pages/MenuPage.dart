@@ -1,11 +1,8 @@
-import 'package:baked/models/order.dart';
 import 'package:baked/pages/HomePage.dart';
 import 'package:baked/pages/OrderPage.dart';
 import 'package:baked/pages/ProfilePage.dart';
-import 'package:baked/providers/order_provider.dart';
 import 'package:baked/widgets/MenuListWidget.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class MenuPage extends StatefulWidget {
   @override
@@ -33,7 +30,7 @@ class _MenuPageState extends State<MenuPage> {
             _currentIndex = index;
           });
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -51,10 +48,10 @@ class _MenuPageState extends State<MenuPage> {
             label: 'Profile',
           ),
         ],
-        unselectedItemColor: Color(0xFF50555C),
-        selectedItemColor: Color(0xFFC35A2E),
-        unselectedLabelStyle: TextStyle(color: Color(0xFF50555C)),
-        selectedLabelStyle: TextStyle(color: Color(0xFFC35A2E)),
+        unselectedItemColor: const Color(0xFF50555C),
+        selectedItemColor: const Color(0xFFC35A2E),
+        unselectedLabelStyle: const TextStyle(color: Color(0xFF50555C)),
+        selectedLabelStyle: const TextStyle(color: Color(0xFFC35A2E)),
       ),
     );
   }
@@ -67,7 +64,7 @@ class MenuPageContent extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.only(right: 20, left: 15, top: 10),
+            padding: const EdgeInsets.only(right: 20, left: 15, top: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -80,8 +77,8 @@ class MenuPageContent extends StatelessWidget {
           ),
           Container(
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.symmetric(horizontal: 15),
-            child: Column(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -96,8 +93,8 @@ class MenuPageContent extends StatelessWidget {
             ),
           ),
           Container(
-            padding: EdgeInsets.only(top: 10),
-            decoration: BoxDecoration(
+            padding: const EdgeInsets.only(top: 10),
+            decoration: const BoxDecoration(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(30),
                 topRight: Radius.circular(30),
@@ -116,141 +113,4 @@ class MenuPageContent extends StatelessWidget {
   }
 }
 
-class MenuItemWidget extends StatefulWidget {
-  final FoodItem foodItem;
-  final String Function(double) formatCurrency;
-  final void Function(FoodItem, int) addToCart;
-
-  MenuItemWidget({
-    required this.foodItem,
-    required this.formatCurrency,
-    required this.addToCart,
-  });
-
-  @override
-  _MenuItemWidgetState createState() => _MenuItemWidgetState();
-}
-
-class _MenuItemWidgetState extends State<MenuItemWidget> {
-  int quantity = 0;
-
-  void _incrementQuantity() {
-    setState(() {
-      quantity++;
-    });
-  }
-
-  void _decrementQuantity() {
-    if (quantity > 0) {
-      setState(() {
-        quantity--;
-      });
-    }
-  }
-
-  void _addToOrder(BuildContext context) {
-    if (quantity > 0) {
-      Order order = Order(
-        name: widget.foodItem.name,
-        price: widget.foodItem.price,
-        imagePath: widget.foodItem.imagePath,
-        quantity: quantity,
-      );
-      Provider.of<OrderProvider>(context, listen: false).addOrder(order);
-      setState(() {
-        quantity = 0;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.asset(
-                widget.foodItem.imagePath,
-                width: 150,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.foodItem.name,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4),
-                Text(
-                  widget.formatCurrency(widget.foodItem.price),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.remove),
-                  onPressed: _decrementQuantity,
-                  color: Theme.of(context).primaryColor,
-                ),
-                Text(
-                  quantity.toString(),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: _incrementQuantity,
-                  color: Theme.of(context).primaryColor,
-                ),
-                ElevatedButton(
-                  onPressed: () => _addToOrder(context),
-                  child: Text('Add to Order'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class FoodItem {
-  final String name;
-  final String imagePath;
-  final double price;
-
-  FoodItem({
-    required this.name,
-    required this.imagePath,
-    required this.price,
-  });
-}
+// Hapus MenuItemWidget dan FoodItem jika sebelumnya ada di sini

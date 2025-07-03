@@ -1,3 +1,5 @@
+import 'package:baked/controllers/menu_controller.dart' as app_controller;
+import 'package:baked/controllers/order_controller.dart' as app_order_controller; // Import OrderController
 import 'package:baked/pages/MenuPage.dart';
 import 'package:baked/pages/OrderPage.dart';
 import 'package:baked/pages/ProfilePage.dart';
@@ -8,9 +10,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void main() {
+  // Pastikan Firebase.initializeApp() sudah dipanggil di main() aplikasi Anda
+  // contoh:
+  // WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp();
+
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => OrderProvider(), // Inisialisasi OrderProvider
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => OrderProvider()),
+        ChangeNotifierProvider(create: (context) => app_controller.MenuController()),
+        ChangeNotifierProvider(create: (context) => app_order_controller.OrderController()), // Tambahkan OrderController
+      ],
       child: MyApp(),
     ),
   );
@@ -23,7 +34,7 @@ class MyApp extends StatelessWidget {
       title: 'Your App',
       theme: ThemeData(
         primarySwatch: Colors.orange,
-        textTheme: TextTheme(),
+        textTheme: const TextTheme(),
       ),
       home: HomePage(),
     );
@@ -52,7 +63,7 @@ class _HomePageState extends State<HomePage> {
     });
     _pageController.animateToPage(
       index,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
@@ -75,7 +86,7 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: onTabTapped,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -93,10 +104,10 @@ class _HomePageState extends State<HomePage> {
             label: 'Profile',
           ),
         ],
-        unselectedItemColor: Color(0xFF50555C),
-        selectedItemColor: Color(0xFFC35A2E),
-        unselectedLabelStyle: TextStyle(color: Color(0xFF50555C)),
-        selectedLabelStyle: TextStyle(color: Color(0xFFC35A2E)),
+        unselectedItemColor: const Color(0xFF50555C),
+        selectedItemColor: const Color(0xFFC35A2E),
+        unselectedLabelStyle: const TextStyle(color: Color(0xFF50555C)),
+        selectedLabelStyle: const TextStyle(color: Color(0xFFC35A2E)),
       ),
     );
   }
@@ -109,7 +120,7 @@ class HomePageContent extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.only(right: 20, left: 15, top: 10),
+            padding: const EdgeInsets.only(right: 20, left: 15, top: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -124,8 +135,8 @@ class HomePageContent extends StatelessWidget {
           ),
           Container(
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.symmetric(horizontal: 15),
-            child: Column(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -144,34 +155,34 @@ class HomePageContent extends StatelessWidget {
             ),
           ),
           Container(
-            margin: EdgeInsets.all(15),
-            padding: EdgeInsets.symmetric(horizontal: 15),
+            margin: const EdgeInsets.all(15),
+            padding: const EdgeInsets.symmetric(horizontal: 15),
             height: 50,
             decoration: BoxDecoration(
-              color: Color.fromARGB(255, 237, 233, 233),
+              color: const Color.fromARGB(255, 237, 233, 233),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
+            child: const Row(
               children: [
                 Icon(Icons.search),
-                Container(
-                  margin: EdgeInsets.only(left: 10),
-                  width: 250,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: "Search here...",
-                      border: InputBorder.none,
+                Expanded( // Menggunakan Expanded agar TextField mengisi ruang yang tersedia
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: "Search here...",
+                        border: InputBorder.none,
+                      ),
                     ),
                   ),
                 ),
-                Spacer(),
                 Icon(Icons.filter_list),
               ],
             ),
           ),
           Container(
-            padding: EdgeInsets.only(top: 20),
-            decoration: BoxDecoration(
+            padding: const EdgeInsets.only(top: 20),
+            decoration: const BoxDecoration(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(30),
                 topRight: Radius.circular(30),
@@ -180,15 +191,14 @@ class HomePageContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // CategoriesWidget(),
                 PopularItemsWidget(),
                 Padding(
                   padding:
-                      EdgeInsets.only(right: 10, bottom: 10, top: 50, left: 20),
+                      const EdgeInsets.only(right: 10, bottom: 10, top: 50, left: 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         "Another Menu",
                         style: TextStyle(
                           fontSize: 24,
@@ -197,11 +207,12 @@ class HomePageContent extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () {
-                          final homePageState =
-                              context.findAncestorStateOfType<_HomePageState>();
-                          homePageState?.onTabTapped(1);
+                          final homePageState = context.findAncestorStateOfType<State<HomePage>>();
+                          homePageState?.setState(() {
+                            (homePageState as _HomePageState).onTabTapped(1);
+                          });
                         },
-                        child: Text(
+                        child: const Text(
                           "See More",
                           style: TextStyle(
                             fontSize: 16,

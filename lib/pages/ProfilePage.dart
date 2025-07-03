@@ -1,5 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:baked/controllers/user_controller.dart'; // Import UserController
 import 'package:flutter/material.dart';
 
 class ProfilePageContent extends StatefulWidget {
@@ -8,8 +7,7 @@ class ProfilePageContent extends StatefulWidget {
 }
 
 class _ProfilePageContentState extends State<ProfilePageContent> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final UserController _userController = UserController(); // Inisialisasi UserController
 
   TextEditingController nameController = TextEditingController();
   TextEditingController addressController = TextEditingController();
@@ -21,28 +19,24 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
   }
 
   Future<void> _loadUserData() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      DocumentSnapshot userDoc =
-          await _firestore.collection('users').doc(user.uid).get();
-
-      if (userDoc.exists) {
+    try {
+      Map<String, dynamic>? userData = await _userController.getUserData(); // Gunakan UserController
+      if (userData != null) {
         setState(() {
-          nameController.text = userDoc['name'] ?? '';
-          addressController.text = userDoc['address'] ?? '';
+          nameController.text = userData['name'] ?? '';
+          addressController.text = userData['address'] ?? '';
         });
       } else {
-        // Handle case when document does not exist
         setState(() {
-          nameController.text = 'Name not found';
-          addressController.text = 'Address not found';
+          nameController.text = 'Data not found';
+          addressController.text = 'Data not found';
         });
       }
-    } else {
-      // Handle case when user is not logged in
+    } catch (e) {
+      print('Error loading user data: $e');
       setState(() {
-        nameController.text = 'User not logged in';
-        addressController.text = 'User not logged in';
+        nameController.text = 'Error loading data';
+        addressController.text = 'Error loading data';
       });
     }
   }
