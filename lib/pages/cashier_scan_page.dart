@@ -72,18 +72,9 @@ class _CashierScanPageState extends State<CashierScanPage> {
     }
   }
 
-  String _determineShift() {
-    final now = DateTime.now();
-    final hour = now.hour;
-
-    if (hour >= 6 && hour < 14) {
-      return 'Pagi';
-    } else if (hour >= 14 && hour < 22) {
-      return 'Sore';
-    } else {
-      return 'Malam';
-    }
-  }
+  // --- FUNGSI _determineShift() DIHAPUS DARI SINI ---
+  // Karena shift akan diambil dari profil kasir di Firestore
+  // ---------------------------------------------------
 
   Future<void> _processPaymentInitiation() async {
     if (scannedOrders.isEmpty) {
@@ -138,7 +129,8 @@ class _CashierScanPageState extends State<CashierScanPage> {
       final menuController = Provider.of<app_menu_controller.MenuController>(context, listen: false);
 
       String? cashierId = authController.currentUser?.uid;
-      String? cashierName; // <--- Variabel untuk nama kasir
+      String? cashierName;
+      String? cashierShift; // <--- Variabel untuk shift kasir
 
       if (cashierId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -147,17 +139,22 @@ class _CashierScanPageState extends State<CashierScanPage> {
         return;
       }
 
-      // Ambil nama kasir dari Firestore menggunakan AuthController
+      // Ambil nama dan shift kasir dari Firestore menggunakan AuthController
       Map<String, dynamic>? cashierProfile = await authController.getCashierProfile(cashierId);
       if (cashierProfile != null) {
-        cashierName = cashierProfile['name'] as String?; // Asumsi field 'name' ada di profil users
-      }
-      if (cashierName == null) {
-        print("Warning: Cashier name not found for UID: $cashierId. Using UID as name.");
-        cashierName = cashierId; // Fallback ke UID jika nama tidak ditemukan
+        cashierName = cashierProfile['name'] as String?;
+        cashierShift = cashierProfile['shift'] as String?; // <--- AMBIL SHIFT DARI PROFIL
       }
 
-      String currentShift = _determineShift();
+      if (cashierName == null) {
+        print("Warning: Cashier name not found for UID: $cashierId. Using UID as name.");
+        cashierName = cashierId;
+      }
+      if (cashierShift == null) {
+        print("Warning: Cashier shift not found for UID: $cashierId. Using 'Unknown' as shift.");
+        cashierShift = 'Unknown'; // Fallback jika shift tidak ditemukan
+      }
+
 
       String customerIdFromOrder = scannedOrders.first.customerId ?? 'guest_via_qr';
 
@@ -181,8 +178,8 @@ class _CashierScanPageState extends State<CashierScanPage> {
               idMakananKatalog: correspondingKatalogItem.id!,
               idOrderOverall: uniqueOrderId,
               idCashier: cashierId,
-              namaCashier: cashierName, // <--- KIRIM NAMA KASIR
-              shift: currentShift,
+              namaCashier: cashierName,
+              shift: cashierShift, // <--- KIRIM SHIFT DARI PROFIL KASIR
             );
           } else {
             print("Warning: Skipping item ${itemInOrder.name}. Katalog item or ID not found.");
@@ -196,7 +193,7 @@ class _CashierScanPageState extends State<CashierScanPage> {
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Order ${uniqueOrderId} processed successfully by ${cashierName} (${currentShift} shift) with ${selectedPaymentMethod}!')),
+          SnackBar(content: Text('Order ${uniqueOrderId} processed successfully by ${cashierName} (${cashierShift} shift) with ${selectedPaymentMethod}!')),
         );
 
         setState(() {

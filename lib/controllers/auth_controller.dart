@@ -9,8 +9,8 @@ class AuthController with ChangeNotifier {
 
   User? get currentUser => _auth.currentUser;
 
-  // Register (sudah ada)
-  Future<UserCredential?> registerUser(String email, String password, String name, String address) async {
+  // Register
+  Future<UserCredential?> registerUser(String email, String password, String name, String address, {String role = 'customer', String? shift}) async {
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -22,9 +22,8 @@ class AuthController with ChangeNotifier {
           'email': email,
           'name': name,
           'address': address,
-          'role': 'customer', // Default role
-          // Jika kasir akan didaftarkan di sini, tambahkan field shift jika diperlukan.
-          // Contoh: 'shift': 'Pagi'
+          'role': role, // Menggunakan parameter role
+          'shift': shift, // Menambahkan field shift
         });
       }
       notifyListeners();
@@ -44,7 +43,7 @@ class AuthController with ChangeNotifier {
     }
   }
 
-  // Login (sudah ada)
+  // Login
   Future<Map<String, dynamic>?> loginUser(String email, String password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
@@ -53,13 +52,10 @@ class AuthController with ChangeNotifier {
       );
 
       if (userCredential.user != null) {
-        // Setelah login, pastikan user data di Firestore diambil.
-        // Ini akan secara implisit memperbarui currentUser.
-        // Data ini sudah dikembalikan oleh method loginUser.
         DocumentSnapshot userDoc = await _firestore.collection('users').doc(userCredential.user!.uid).get();
         if (userDoc.exists) {
-          notifyListeners(); // Beri tahu listener setelah login berhasil
-          return userDoc.data() as Map<String, dynamic>; // Mengembalikan semua data user, termasuk role dan nama
+          notifyListeners();
+          return userDoc.data() as Map<String, dynamic>;
         } else {
           await _auth.signOut();
           throw Exception('User data not found in database. Please contact support.');
@@ -81,7 +77,7 @@ class AuthController with ChangeNotifier {
     }
   }
 
-  // <--- TAMBAHKAN METODE BARU INI UNTUK MENDAPATKAN DATA PROFIL KASIR ---
+  // Metode untuk mendapatkan data profil kasir/pengguna
   Future<Map<String, dynamic>?> getCashierProfile(String uid) async {
     try {
       DocumentSnapshot userDoc = await _firestore.collection('users').doc(uid).get();
@@ -94,15 +90,46 @@ class AuthController with ChangeNotifier {
       return null;
     }
   }
-  // ---------------------------------------------------------------------
 
-  // Logout (sudah ada)
+  // --- Metode Baru: Update Shift Pengguna oleh Admin ---
+  Future<void> updateUserShift(String uid, String newShift) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'shift': newShift,
+      });
+      print("Shift for user $uid updated to $newShift");
+      notifyListeners(); // Beri tahu listener jika ada yang memantau perubahan user
+    } catch (e) {
+      print("Error updating shift for user $uid: $e");
+      throw Exception('Failed to update user shift: $e');
+    }
+  }
+
+  // --- Metode Baru: Mendapatkan Semua Pengguna (untuk Admin) ---
+  Future<List<Map<String, dynamic>>> getAllUsers() async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore.collection('users').get();
+      return querySnapshot.docs.map((doc) => {
+        'uid': doc.id,
+        'email': doc['email'],
+        'name': doc['name'],
+        'role': doc['role'],
+        'shift': doc['shift'], // Pastikan field shift ada
+      }).toList();
+    } catch (e) {
+      print("Error fetching all users: $e");
+      return [];
+    }
+  }
+  // ---------------------------------------------------
+
+  // Logout
   Future<void> signOut() async {
     await _auth.signOut();
     notifyListeners();
   }
 
-  // Mendapatkan peran pengguna saat ini (sudah ada)
+  // Mendapatkan peran pengguna saat ini
   Future<String?> getCurrentUserRole() async {
     User? user = _auth.currentUser;
     if (user != null) {
