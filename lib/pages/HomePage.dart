@@ -17,7 +17,7 @@ import 'package:baked/widgets/MenuListWidget.dart';
 import 'package:baked/widgets/PopularItemsWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:baked/pages/cashier_scan_page.dart';
 
 void main() {
   // main() ini ada di HomePage.dart, tapi harusnya dihapus atau dipindah ke main.dart utama
@@ -54,6 +54,7 @@ class MyApp extends StatelessWidget {
         "admin_menu_page": (context) => AdminMenuPage(),
         "menu_management_page": (context) => MenuManagementPage(),
         "shift_management_page": (context) => ShiftManagementPage(),
+        "cashier_scan_page": (context) => const CashierScanPage(),
       },
       debugShowMaterialGrid: false, // Tambahkan ini
     );
