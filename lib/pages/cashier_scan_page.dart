@@ -48,6 +48,22 @@ class _CashierScanPageState extends State<CashierScanPage> {
       String? rawData = barcodes.first.rawValue;
       print('Barcode found! Data: $rawData');
 
+      // DEBUGGING MENDALAM
+    try {
+        List<dynamic> decodedList = jsonDecode(rawData!);
+        print('Decoded List: $decodedList'); // Lihat isi list yang di-decode
+        if (decodedList.isEmpty) {
+            print('Decoded list is empty!');
+        } else {
+            print('First decoded item: ${decodedList.first}');
+        }
+        List<Order> tempOrders = decodedList.map((item) => Order.fromJson(item as Map<String, dynamic>)).toList();
+        print('Parsed Orders: ${tempOrders.map((o) => o.name).join(', ')}'); // Lihat nama order yang berhasil di-parse
+        // ... set state
+    } catch (e) {
+        print('DECODING ERROR: $e');
+    }
+
       try {
         List<dynamic> decodedList = jsonDecode(rawData!);
         List<Order> tempOrders = decodedList.map((item) => Order.fromJson(item as Map<String, dynamic>)).toList();

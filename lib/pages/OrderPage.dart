@@ -1,7 +1,3 @@
-import 'package:baked/controllers/auth_controller.dart';
-import 'package:baked/controllers/menu_controller.dart' as app_menu_controller;
-import 'package:baked/controllers/order_controller.dart';
-import 'package:baked/models/katalog.dart'; // Pastikan ini diimport
 import 'package:baked/models/order.dart';
 import 'package:baked/pages/QrCodePage.dart';
 import 'package:baked/providers/order_provider.dart';
@@ -68,57 +64,34 @@ class OrderPage extends StatelessWidget {
           if (orderProvider.orders.isNotEmpty) {
             return FloatingActionButton.extended(
               onPressed: () async {
-                final orderController = Provider.of<OrderController>(context, listen: false);
-                final authController = Provider.of<AuthController>(context, listen: false);
-                final menuController = Provider.of<app_menu_controller.MenuController>(context, listen: false);
+                // --- HAPUS SEMUA LOGIKA PENYIMPANAN KE DATABASE DARI SINI ---
+                // final orderController = Provider.of<OrderController>(context, listen: false);
+                // final authController = Provider.of<AuthController>(context, listen: false);
+                // final menuController = Provider.of<app_menu_controller.MenuController>(context, listen: false);
+                // String? customerId = authController.currentUser?.uid;
+                // if (customerId == null) { /* ... */ return; }
+                // String uniqueOrderId = DateTime.now().millisecondsSinceEpoch.toString();
+                // for (Order itemInCart in orderProvider.orders) { /* ... */ }
+                // -------------------------------------------------------------
 
-                // Dapatkan customerId dari AuthController
-                String? customerId = authController.currentUser?.uid;
+                // Simpan salinan pesanan yang akan di-QR Code
+                final List<Order> currentOrders = List.from(orderProvider.orders);
 
-                if (customerId == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please log in to place an order. (Customer ID is null)')),
-                  );
-                  return;
-                }
-
-                String uniqueOrderId = DateTime.now().millisecondsSinceEpoch.toString();
-
-                for (Order itemInCart in orderProvider.orders) {
-                  Katalog? correspondingKatalogItem;
-                  try {
-                    correspondingKatalogItem = menuController.menuItems
-                        .firstWhere((katalogItem) => katalogItem.namaMakanan == itemInCart.name);
-                  } catch (e) {
-                    print("Could not find corresponding Katalog item for ${itemInCart.name}: $e");
-                  }
-
-                  if (correspondingKatalogItem != null && correspondingKatalogItem.id != null) {
-                    await orderController.addOrUpdateTransaksiFromOrder(
-                      orderItem: itemInCart,
-                      idCustomer: customerId,
-                      idMakananKatalog: correspondingKatalogItem.id!,
-                      idOrderOverall: uniqueOrderId,
-                    );
-                  } else {
-                    print("Warning: Skipping item ${itemInCart.name}. Could not find corresponding Katalog item or item ID is null.");
-                  }
-                }
-
+                // Kosongkan keranjang pelanggan di aplikasi
                 orderProvider.clearCart();
 
+                // Navigasi ke halaman QR Code, dan teruskan daftar pesanan yang akan di-encode
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        QrCodePage(orders: []),
+                    builder: (context) => QrCodePage(orders: currentOrders), // Kirim order yang akan di-QR
                   ),
                 );
               },
               backgroundColor: const Color.fromRGBO(195, 90, 45, 1),
               foregroundColor: Colors.white,
               icon: const Icon(Icons.qr_code),
-              label: const Text('Payment Now'),
+              label: const Text('Generate QR Code'), // Ubah teks tombol
             );
           } else {
             return Container();

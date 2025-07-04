@@ -1,8 +1,9 @@
+// lib/models/order.dart (Pastikan fromJson seperti ini)
 class Order {
   final String name;
   final double price;
   final int quantity;
-  final String? imagePath; // Nullable if not always present
+  final String? imagePath;
 
   Order({
     required this.name,
@@ -25,13 +26,13 @@ class Order {
     );
   }
 
-  // Tambahkan factory fromJson dan toJson jika Order juga disimpan di Firebase Realtime Database
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
       name: json['name'] as String,
       price: (json['price'] as num).toDouble(),
       quantity: json['quantity'] as int,
-      imagePath: json['imagePath'] as String?,
+      // PASTIKAN INI MENANGANI NULL DENGAN BAIK
+      imagePath: json['imagePath'] as String?, // Membaca sebagai String?
     );
   }
 
@@ -40,7 +41,7 @@ class Order {
       'name': name,
       'price': price,
       'quantity': quantity,
-      'imagePath': imagePath,
+      'imagePath': imagePath, // Ini akan mengirim null jika imagePath memang null
     };
   }
 }
