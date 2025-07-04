@@ -1,16 +1,20 @@
+// lib/models/transaksi.dart
 
 
 class Transaksi {
-  final String? idTransaksi; // ID unik untuk setiap baris transaksi di DB
-  final String idOrder; // ID pesanan secara keseluruhan (jika ingin grouping)
+  final String? idTransaksi;
+  final String idOrder;
   final DateTime tanggalOrder;
-  final String idMakanan; // ID produk dari Katalog (Firestore ID)
-  final String namaMakanan; // Tambahan untuk kemudahan
-  final String? imagePath; // Tambahan untuk kemudahan
+  final String idMakanan;
+  final String namaMakanan;
+  final String? imagePath;
   final String idCustomer;
-  final double hargaPerItem; // Harga satuan (sesuai diagram 'harga')
-  final int jumlahItem; // Kuantitas (sesuai diagram 'total_order')
-  final double totalHargaItem; // total_order: int di diagram (saya asumsikan total harga per item)
+  final double hargaPerItem;
+  final int jumlahItem;
+  final double totalHargaItem;
+  final String? idCashier;
+  final String? namaCashier; // <--- TAMBAHKAN INI
+  final String? shift;
 
   Transaksi({
     this.idTransaksi,
@@ -23,13 +27,47 @@ class Transaksi {
     required this.hargaPerItem,
     required this.jumlahItem,
     required this.totalHargaItem,
+    this.idCashier,
+    this.namaCashier, // <--- TAMBAHKAN INI
+    this.shift,
   });
 
-  // Convert to JSON for Firebase Realtime Database
+  Transaksi copyWith({
+    String? idTransaksi,
+    String? idOrder,
+    DateTime? tanggalOrder,
+    String? idMakanan,
+    String? namaMakanan,
+    String? imagePath,
+    String? idCustomer,
+    double? hargaPerItem,
+    int? jumlahItem,
+    double? totalHargaItem,
+    String? idCashier,
+    String? namaCashier, // <--- TAMBAHKAN INI
+    String? shift,
+  }) {
+    return Transaksi(
+      idTransaksi: idTransaksi ?? this.idTransaksi,
+      idOrder: idOrder ?? this.idOrder,
+      tanggalOrder: tanggalOrder ?? this.tanggalOrder,
+      idMakanan: idMakanan ?? this.idMakanan,
+      namaMakanan: namaMakanan ?? this.namaMakanan,
+      imagePath: imagePath ?? this.imagePath,
+      idCustomer: idCustomer ?? this.idCustomer,
+      hargaPerItem: hargaPerItem ?? this.hargaPerItem,
+      jumlahItem: jumlahItem ?? this.jumlahItem,
+      totalHargaItem: totalHargaItem ?? this.totalHargaItem,
+      idCashier: idCashier ?? this.idCashier,
+      namaCashier: namaCashier ?? this.namaCashier, // <--- TAMBAHKAN INI
+      shift: shift ?? this.shift,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id_order': idOrder,
-      'tanggal_order': tanggalOrder.toIso8601String(), // Simpan sebagai string ISO 8601
+      'tanggal_order': tanggalOrder.toIso8601String(),
       'id_makanan': idMakanan,
       'nama_makanan': namaMakanan,
       'image_path': imagePath,
@@ -37,13 +75,15 @@ class Transaksi {
       'harga_per_item': hargaPerItem,
       'jumlah_item': jumlahItem,
       'total_harga_item': totalHargaItem,
+      'id_cashier': idCashier,
+      'nama_cashier': namaCashier, // <--- TAMBAHKAN INI
+      'shift': shift,
     };
   }
 
-  // Create from JSON (e.g., when reading from Firebase)
-  factory Transaksi.fromJson(Map<String, dynamic> json, String idTransaksi) {
+  factory Transaksi.fromJson(Map<String, dynamic> json, String id) {
     return Transaksi(
-      idTransaksi: idTransaksi,
+      idTransaksi: id,
       idOrder: json['id_order'] as String,
       tanggalOrder: DateTime.parse(json['tanggal_order'] as String),
       idMakanan: json['id_makanan'] as String,
@@ -51,8 +91,11 @@ class Transaksi {
       imagePath: json['image_path'] as String?,
       idCustomer: json['id_customer'] as String,
       hargaPerItem: (json['harga_per_item'] as num).toDouble(),
-      jumlahItem: json['jumlah_item'] as int,
+      jumlahItem: (json['jumlah_item'] as num).toInt(),
       totalHargaItem: (json['total_harga_item'] as num).toDouble(),
+      idCashier: json['id_cashier'] as String?,
+      namaCashier: json['nama_cashier'] as String?, // <--- TAMBAHKAN INI
+      shift: json['shift'] as String?,
     );
   }
 }

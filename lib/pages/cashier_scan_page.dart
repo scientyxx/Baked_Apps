@@ -1,3 +1,4 @@
+// lib/pages/cashier_scan_page.dart
 import 'dart:convert';
 
 import 'package:baked/controllers/auth_controller.dart';
@@ -6,7 +7,7 @@ import 'package:baked/controllers/order_controller.dart';
 import 'package:baked/models/katalog.dart';
 import 'package:baked/models/order.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart'; // Pastikan versi di pubspec.yaml sesuai
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 
 class CashierScanPage extends StatefulWidget {
@@ -45,10 +46,9 @@ class _CashierScanPageState extends State<CashierScanPage> {
       String? rawData = barcodes.first.rawValue;
       print('Barcode found! Data: $rawData');
 
-      // --- SATUKAN KODE DEBUGGING DAN LOGIKA UTAMA DI SINI ---
       try {
         List<dynamic> decodedList = jsonDecode(rawData!);
-        print('Decoded List: $decodedList'); // Debug: Lihat isi list yang di-decode
+        print('Decoded List: $decodedList');
         if (decodedList.isEmpty) {
           print('Decoded list is empty!');
         } else {
@@ -56,7 +56,7 @@ class _CashierScanPageState extends State<CashierScanPage> {
         }
 
         List<Order> tempOrders = decodedList.map((item) => Order.fromJson(item as Map<String, dynamic>)).toList();
-        print('Parsed Orders: ${tempOrders.map((o) => o.name).join(', ')}'); // Debug: Lihat nama order yang berhasil di-parse
+        print('Parsed Orders: ${tempOrders.map((o) => o.name).join(', ')}');
 
         setState(() {
           scannedOrders = tempOrders;
@@ -64,16 +64,28 @@ class _CashierScanPageState extends State<CashierScanPage> {
         });
         cameraController.stop();
       } catch (e) {
-        print('Error decoding QR data: $e'); // Debug: Tampilkan error decoding
+        print('Error decoding QR data: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Invalid QR Code data: ${e.toString()}')),
         );
       }
-      // --- AKHIR KODE SATUAN ---
     }
   }
 
-  Future<void> _processPayment() async {
+  String _determineShift() {
+    final now = DateTime.now();
+    final hour = now.hour;
+
+    if (hour >= 6 && hour < 14) {
+      return 'Pagi';
+    } else if (hour >= 14 && hour < 22) {
+      return 'Sore';
+    } else {
+      return 'Malam';
+    }
+  }
+
+  Future<void> _processPaymentInitiation() async {
     if (scannedOrders.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No orders to process.')),
@@ -81,53 +93,127 @@ class _CashierScanPageState extends State<CashierScanPage> {
       return;
     }
 
-    final orderController = Provider.of<OrderController>(context, listen: false);
-    final authController = Provider.of<AuthController>(context, listen: false);
-    final menuController = Provider.of<app_menu_controller.MenuController>(context, listen: false);
+    double totalOrderPrice = scannedOrders.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
 
-    String? cashierId = authController.currentUser?.uid;
-    if (cashierId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cashier not logged in. Please log in.')),
-      );
-      return;
-    }
-
-    String uniqueOrderId = DateTime.now().millisecondsSinceEpoch.toString();
-
-    for (Order itemInOrder in scannedOrders) {
-      Katalog? correspondingKatalogItem;
-      try {
-        correspondingKatalogItem = menuController.menuItems
-            .firstWhere((katalogItem) => katalogItem.namaMakanan == itemInOrder.name);
-      } catch (e) {
-        print("Warning: Could not find corresponding Katalog item for ${itemInOrder.name}: $e");
-      }
-
-      // Ambil idCustomer dari Order yang di-scan (yang sudah ada di QR Code)
-      String customerIdFromOrder = itemInOrder.customerId ?? 'guest_via_qr'; // Fallback jika tidak ada customerId di order
-
-      if (correspondingKatalogItem != null && correspondingKatalogItem.id != null) {
-        await orderController.addOrUpdateTransaksiFromOrder(
-          orderItem: itemInOrder,
-          idCustomer: customerIdFromOrder, // <--- GUNAKAN idCustomer DARI ORDER YANG DI-SCAN
-          idMakananKatalog: correspondingKatalogItem.id!,
-          idOrderOverall: uniqueOrderId,
+    String? selectedPaymentMethod = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Select Payment Method'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext, 'Cash');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFC35A2E),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text('Cash'),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext, 'QRIS');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFC35A2E),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text('QRIS'),
+              ),
+            ],
+          ),
         );
-      } else {
-        print("Warning: Skipping item ${itemInOrder.name}. Katalog item or ID not found.");
-      }
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Payment processed successfully!')),
+      },
     );
 
-    setState(() {
-      scannedOrders = [];
-      scanCompleted = false;
-    });
-    cameraController.start();
+    if (selectedPaymentMethod != null) {
+      final orderController = Provider.of<OrderController>(context, listen: false);
+      final authController = Provider.of<AuthController>(context, listen: false);
+      final menuController = Provider.of<app_menu_controller.MenuController>(context, listen: false);
+
+      String? cashierId = authController.currentUser?.uid;
+      String? cashierName; // <--- Variabel untuk nama kasir
+
+      if (cashierId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cashier not logged in. Please log in.')),
+        );
+        return;
+      }
+
+      // Ambil nama kasir dari Firestore menggunakan AuthController
+      Map<String, dynamic>? cashierProfile = await authController.getCashierProfile(cashierId);
+      if (cashierProfile != null) {
+        cashierName = cashierProfile['name'] as String?; // Asumsi field 'name' ada di profil users
+      }
+      if (cashierName == null) {
+        print("Warning: Cashier name not found for UID: $cashierId. Using UID as name.");
+        cashierName = cashierId; // Fallback ke UID jika nama tidak ditemukan
+      }
+
+      String currentShift = _determineShift();
+
+      String customerIdFromOrder = scannedOrders.first.customerId ?? 'guest_via_qr';
+
+      String uniqueOrderId = scannedOrders.first.name.replaceAll(RegExp(r'[.#$\[\]/]'), '_') +
+                             DateTime.now().millisecondsSinceEpoch.toString();
+
+      try {
+        for (Order itemInOrder in scannedOrders) {
+          Katalog? correspondingKatalogItem;
+          try {
+            correspondingKatalogItem = menuController.menuItems
+                .firstWhere((katalogItem) => katalogItem.namaMakanan == itemInOrder.name);
+          } catch (e) {
+            print("Warning: Could not find corresponding Katalog item for ${itemInOrder.name}: $e");
+          }
+
+          if (correspondingKatalogItem != null && correspondingKatalogItem.id != null) {
+            await orderController.addOrUpdateTransaksiFromOrder(
+              orderItem: itemInOrder,
+              idCustomer: customerIdFromOrder,
+              idMakananKatalog: correspondingKatalogItem.id!,
+              idOrderOverall: uniqueOrderId,
+              idCashier: cashierId,
+              namaCashier: cashierName, // <--- KIRIM NAMA KASIR
+              shift: currentShift,
+            );
+          } else {
+            print("Warning: Skipping item ${itemInOrder.name}. Katalog item or ID not found.");
+          }
+        }
+
+        await orderController.savePayment(
+          idOrder: uniqueOrderId,
+          metodeBayar: selectedPaymentMethod,
+          totalPembayaran: totalOrderPrice,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Order ${uniqueOrderId} processed successfully by ${cashierName} (${currentShift} shift) with ${selectedPaymentMethod}!')),
+        );
+
+        setState(() {
+          scannedOrders = [];
+          scanCompleted = false;
+        });
+        cameraController.start();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to process order: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment method selection cancelled.')),
+      );
+    }
   }
 
   @override
@@ -249,7 +335,7 @@ class _CashierScanPageState extends State<CashierScanPage> {
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: scanCompleted ? _processPayment : null,
+                    onPressed: scanCompleted ? _processPaymentInitiation : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(vertical: 15),
