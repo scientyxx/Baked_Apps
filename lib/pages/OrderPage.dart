@@ -1,3 +1,4 @@
+import 'package:baked/controllers/auth_controller.dart'; // Pastikan ini diimport
 import 'package:baked/models/order.dart';
 import 'package:baked/pages/QrCodePage.dart';
 import 'package:baked/providers/order_provider.dart';
@@ -64,34 +65,32 @@ class OrderPage extends StatelessWidget {
           if (orderProvider.orders.isNotEmpty) {
             return FloatingActionButton.extended(
               onPressed: () async {
-                // --- HAPUS SEMUA LOGIKA PENYIMPANAN KE DATABASE DARI SINI ---
-                // final orderController = Provider.of<OrderController>(context, listen: false);
-                // final authController = Provider.of<AuthController>(context, listen: false);
-                // final menuController = Provider.of<app_menu_controller.MenuController>(context, listen: false);
-                // String? customerId = authController.currentUser?.uid;
-                // if (customerId == null) { /* ... */ return; }
-                // String uniqueOrderId = DateTime.now().millisecondsSinceEpoch.toString();
-                // for (Order itemInCart in orderProvider.orders) { /* ... */ }
-                // -------------------------------------------------------------
+                // --- PERBAIKI: Dapatkan authController di sini ---
+                final authController = Provider.of<AuthController>(context, listen: false);
+                // --------------------------------------------------
 
-                // Simpan salinan pesanan yang akan di-QR Code
-                final List<Order> currentOrders = List.from(orderProvider.orders);
+                String? customerIdForQr = authController.currentUser?.uid; // ID pelanggan yang login
+                if (customerIdForQr == null) {
+                  customerIdForQr = 'guest_user'; // Atau ID guest yang lebih unik
+                }
 
-                // Kosongkan keranjang pelanggan di aplikasi
+                final List<Order> ordersForQr = orderProvider.orders.map((order) {
+                  return order.copyWith(customerId: customerIdForQr); // Tambahkan customerId ke setiap order
+                }).toList();
+
                 orderProvider.clearCart();
 
-                // Navigasi ke halaman QR Code, dan teruskan daftar pesanan yang akan di-encode
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => QrCodePage(orders: currentOrders), // Kirim order yang akan di-QR
+                    builder: (context) => QrCodePage(orders: ordersForQr), // Teruskan order dengan customerId
                   ),
                 );
               },
               backgroundColor: const Color.fromRGBO(195, 90, 45, 1),
               foregroundColor: Colors.white,
               icon: const Icon(Icons.qr_code),
-              label: const Text('Generate QR Code'), // Ubah teks tombol
+              label: const Text('Generate QR Code'),
             );
           } else {
             return Container();

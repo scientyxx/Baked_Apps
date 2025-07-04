@@ -61,10 +61,9 @@ class AdminMenuPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            // Tombol Baru untuk Kasir Scan
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, "cashier_scan_page"); // <--- NAVIGASI KE HALAMAN KASIR
+                Navigator.pushNamed(context, "cashier_scan_page");
               },
               icon: const Icon(Icons.qr_code_scanner),
               label: const Text("Process Orders (Cashier)"),
@@ -78,9 +77,8 @@ class AdminMenuPage extends StatelessWidget {
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Go to Transaction Reports! (Not yet implemented)')),
-                );
+                // <--- UBAH INI: Navigasi ke halaman riwayat transaksi
+                Navigator.pushNamed(context, "transaction_history_page");
               },
               icon: const Icon(Icons.analytics),
               label: const Text("View Transactions"),

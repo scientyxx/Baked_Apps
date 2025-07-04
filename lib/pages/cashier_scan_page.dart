@@ -27,9 +27,6 @@ class _CashierScanPageState extends State<CashierScanPage> {
   @override
   void initState() {
     super.initState();
-    // Inisialisasi awal state obor dan kamera
-    // Pada versi mobile_scanner ini, tidak ada getter langsung untuk state awal.
-    // Kita akan mengasumsikan default 'off' dan 'back' dan mengandalkan toggle manual.
   }
 
   @override
@@ -48,25 +45,18 @@ class _CashierScanPageState extends State<CashierScanPage> {
       String? rawData = barcodes.first.rawValue;
       print('Barcode found! Data: $rawData');
 
-      // DEBUGGING MENDALAM
-    try {
-        List<dynamic> decodedList = jsonDecode(rawData!);
-        print('Decoded List: $decodedList'); // Lihat isi list yang di-decode
-        if (decodedList.isEmpty) {
-            print('Decoded list is empty!');
-        } else {
-            print('First decoded item: ${decodedList.first}');
-        }
-        List<Order> tempOrders = decodedList.map((item) => Order.fromJson(item as Map<String, dynamic>)).toList();
-        print('Parsed Orders: ${tempOrders.map((o) => o.name).join(', ')}'); // Lihat nama order yang berhasil di-parse
-        // ... set state
-    } catch (e) {
-        print('DECODING ERROR: $e');
-    }
-
+      // --- SATUKAN KODE DEBUGGING DAN LOGIKA UTAMA DI SINI ---
       try {
         List<dynamic> decodedList = jsonDecode(rawData!);
+        print('Decoded List: $decodedList'); // Debug: Lihat isi list yang di-decode
+        if (decodedList.isEmpty) {
+          print('Decoded list is empty!');
+        } else {
+          print('First decoded item: ${decodedList.first}');
+        }
+
         List<Order> tempOrders = decodedList.map((item) => Order.fromJson(item as Map<String, dynamic>)).toList();
+        print('Parsed Orders: ${tempOrders.map((o) => o.name).join(', ')}'); // Debug: Lihat nama order yang berhasil di-parse
 
         setState(() {
           scannedOrders = tempOrders;
@@ -74,11 +64,12 @@ class _CashierScanPageState extends State<CashierScanPage> {
         });
         cameraController.stop();
       } catch (e) {
-        print('Error decoding QR data: $e');
+        print('Error decoding QR data: $e'); // Debug: Tampilkan error decoding
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Invalid QR Code data: ${e.toString()}')),
         );
       }
+      // --- AKHIR KODE SATUAN ---
     }
   }
 
@@ -113,10 +104,13 @@ class _CashierScanPageState extends State<CashierScanPage> {
         print("Warning: Could not find corresponding Katalog item for ${itemInOrder.name}: $e");
       }
 
+      // Ambil idCustomer dari Order yang di-scan (yang sudah ada di QR Code)
+      String customerIdFromOrder = itemInOrder.customerId ?? 'guest_via_qr'; // Fallback jika tidak ada customerId di order
+
       if (correspondingKatalogItem != null && correspondingKatalogItem.id != null) {
         await orderController.addOrUpdateTransaksiFromOrder(
           orderItem: itemInOrder,
-          idCustomer: cashierId,
+          idCustomer: customerIdFromOrder, // <--- GUNAKAN idCustomer DARI ORDER YANG DI-SCAN
           idMakananKatalog: correspondingKatalogItem.id!,
           idOrderOverall: uniqueOrderId,
         );
@@ -161,21 +155,14 @@ class _CashierScanPageState extends State<CashierScanPage> {
             ),
             iconSize: 32.0,
             onPressed: () {
-              // --- KEMBALI KE toggleTorch() ---
               cameraController.toggleTorch();
-              // --- SESUAIKAN PEMBARUAN _torchState LOKAL ---
-              // Asumsi toggleTorch() hanya memutar antara ON dan OFF
-              // atau ke AUTO jika didukung. Ini adalah estimasi.
               if (_torchState.value == TorchState.on) {
                 _torchState.value = TorchState.off;
               } else if (_torchState.value == TorchState.off) {
-                // Jika perangkat mendukung 'auto', bisa cycle ke auto dulu
-                // Atau langsung ke 'on' jika hanya toggle on/off
                 _torchState.value = TorchState.on;
               } else if (_torchState.value == TorchState.auto) {
                 _torchState.value = TorchState.off;
               }
-              // TorchState.unavailable tidak di-toggle, itu adalah kondisi hardware.
             },
           ),
           IconButton(

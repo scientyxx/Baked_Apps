@@ -1,5 +1,6 @@
 import 'package:baked/controllers/auth_controller.dart';
 import 'package:baked/controllers/user_controller.dart';
+import 'package:baked/pages/transaction_history_page.dart'; // <--- TAMBAHKAN IMPORT INI
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -134,13 +135,47 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                 ),
                 readOnly: true,
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20), // <--- Tambahkan sedikit spasi di sini
 
-              // Tombol Logout Baru
+              // Tombol History Baru untuk Customer
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Hanya navigasi jika ada user yang login
+                  if (authController.currentUser != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionHistoryPage(
+                          customerId: authController.currentUser!.uid, // <--- Kirim ID pelanggan
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please log in to view your order history.')),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.history, color: Colors.white),
+                label: const Text(
+                  "Order History",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFC35A2E),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20), // <--- Spasi antara tombol history dan logout
+
+              // Tombol Logout
               ElevatedButton.icon(
                 onPressed: () async {
-                  await authController.signOut(); // Panggil signOut dari AuthController
-                  // Arahkan ke halaman login menggunakan pushReplacementNamed
+                  await authController.signOut();
                   Navigator.pushReplacementNamed(context, "loginpage");
                 },
                 icon: const Icon(Icons.logout, color: Colors.white),

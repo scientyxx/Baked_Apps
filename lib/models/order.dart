@@ -1,15 +1,17 @@
-// lib/models/order.dart (Pastikan fromJson seperti ini)
+// lib/models/order.dart
 class Order {
   final String name;
   final double price;
   final int quantity;
   final String? imagePath;
+  final String? customerId; // <--- TAMBAHKAN INI
 
   Order({
     required this.name,
     required this.price,
     required this.quantity,
     this.imagePath,
+    this.customerId, // <--- INISIALISASI
   });
 
   Order copyWith({
@@ -17,12 +19,14 @@ class Order {
     double? price,
     int? quantity,
     String? imagePath,
+    String? customerId, // <--- TAMBAHKAN INI
   }) {
     return Order(
       name: name ?? this.name,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
       imagePath: imagePath ?? this.imagePath,
+      customerId: customerId ?? this.customerId, // <--- PERBARUI INI
     );
   }
 
@@ -31,8 +35,8 @@ class Order {
       name: json['name'] as String,
       price: (json['price'] as num).toDouble(),
       quantity: json['quantity'] as int,
-      // PASTIKAN INI MENANGANI NULL DENGAN BAIK
-      imagePath: json['imagePath'] as String?, // Membaca sebagai String?
+      imagePath: json['imagePath'] as String?,
+      customerId: json['customerId'] as String?, // <--- BACA DARI JSON
     );
   }
 
@@ -41,7 +45,8 @@ class Order {
       'name': name,
       'price': price,
       'quantity': quantity,
-      'imagePath': imagePath, // Ini akan mengirim null jika imagePath memang null
+      'imagePath': imagePath,
+      'customerId': customerId, // <--- SERTAKAN DI JSON
     };
   }
 }
