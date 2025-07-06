@@ -1,13 +1,35 @@
+import 'package:baked/controllers/auth_controller.dart';
 import 'package:baked/controllers/order_controller.dart';
 import 'package:baked/models/transaksi.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class TransactionHistoryPage extends StatelessWidget {
-  final String? customerId; // <--- TAMBAHKAN INI (Opsional, untuk filter per pelanggan)
+class TransactionHistoryPage extends StatefulWidget {
+  final String? customerId;
 
-  const TransactionHistoryPage({Key? key, this.customerId}) : super(key: key); // <--- TAMBAHKAN INI
+  const TransactionHistoryPage({Key? key, this.customerId}) : super(key: key);
+
+  @override
+  State<TransactionHistoryPage> createState() => _TransactionHistoryPageState();
+}
+
+class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
+  String? _userRole;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserRole();
+  }
+
+  Future<void> _checkUserRole() async {
+    final authController = Provider.of<AuthController>(context, listen: false);
+    String? role = await authController.getCurrentUserRole();
+    setState(() {
+      _userRole = role;
+    });
+  }
 
   String formatCurrency(double amount) {
     final formatCurrency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
@@ -16,9 +38,21 @@ class TransactionHistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_userRole == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Loading History..."),
+          centerTitle: true,
+          backgroundColor: const Color(0xFFC35A2E),
+          foregroundColor: Colors.white,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(customerId != null ? "My Order History" : "Transaction History"), // Ubah judul
+        title: Text(widget.customerId != null ? "My Order History" : "Transaction History"),
         centerTitle: true,
         backgroundColor: const Color(0xFFC35A2E),
         foregroundColor: Colors.white,
@@ -27,23 +61,20 @@ class TransactionHistoryPage extends StatelessWidget {
         builder: (context, orderController, child) {
           List<Transaksi> filteredTransactions = orderController.transaksiItems;
 
-          // --- LOGIKA FILTER TRANSAKSI PER PELANGGAN ---
-          if (customerId != null && customerId!.isNotEmpty) {
+          if (widget.customerId != null && widget.customerId!.isNotEmpty) {
             filteredTransactions = filteredTransactions
-                .where((transaksi) => transaksi.idCustomer == customerId)
+                .where((transaksi) => transaksi.idCustomer == widget.customerId)
                 .toList();
           }
-          // ---------------------------------------------
 
           if (filteredTransactions.isEmpty) {
             return const Center(
-              child: Text("No transactions recorded yet for this user."), // Ubah pesan
+              child: Text("No transactions recorded yet for this user."),
             );
           }
 
-          // Group transaksi berdasarkan idOrder (untuk mengelompokkan item dalam satu pesanan)
           Map<String, List<Transaksi>> groupedTransactions = {};
-          for (var transaksi in filteredTransactions) { // Gunakan filteredTransactions
+          for (var transaksi in filteredTransactions) {
             groupedTransactions.putIfAbsent(transaksi.idOrder, () => []).add(transaksi);
           }
 
@@ -53,7 +84,6 @@ class TransactionHistoryPage extends StatelessWidget {
             DateTime dateB = groupedTransactions[b]![0].tanggalOrder;
             return dateB.compareTo(dateA);
           });
-
 
           return ListView.builder(
             itemCount: sortedOrderIds.length,
@@ -77,13 +107,15 @@ class TransactionHistoryPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        "Date: ${DateFormat('dd-MM-yyyy HH:mm').format(transactionsInOrder[0].tanggalOrder)}",
+                        // UBAH FORMAT TANGGAL DI SINI
+                        "Date: ${DateFormat('dd MMM yyyy hh:mm a').format(transactionsInOrder[0].tanggalOrder)}",
                         style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                       ),
-                      Text(
-                        "Customer ID: ${transactionsInOrder[0].idCustomer}", // Tetap tampilkan Customer ID
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      ),
+                      if (_userRole != 'customer')
+                        Text(
+                          "Customer ID: ${transactionsInOrder[0].idCustomer}",
+                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                        ),
                       const Divider(),
                       ...transactionsInOrder.map((transaksi) {
                         return Padding(
