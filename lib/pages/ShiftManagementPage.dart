@@ -4,101 +4,46 @@ import 'package:baked/models/shift.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ShiftManagementPage extends StatelessWidget {
+class ShiftManagementPage extends StatefulWidget { // UBAH MENJADI StatefulWidget
+  const ShiftManagementPage({Key? key}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Manage Shifts"),
-        centerTitle: true,
-        backgroundColor: const Color(0xFFC35A2E),
-        foregroundColor: Colors.white,
-      ),
-      body: Consumer<app_shift_controller.ShiftController>(
-        builder: (context, shiftController, child) {
-          if (shiftController.shifts.isEmpty) {
-            return const Center(child: Text("No shifts defined yet. Add some!"));
-          }
-          return ListView.builder(
-            itemCount: shiftController.shifts.length,
-            itemBuilder: (context, index) {
-              final shift = shiftController.shifts[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: ListTile(
-                  title: Text("${shift.namaShift} (${shift.shiftType})"),
-                  subtitle: Text("Pukul: ${shift.waktuMulai} - ${shift.waktuSelesai}"),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () {
-                          _showShiftForm(context, shiftController, Provider.of<AuthController>(context, listen: false), shift);
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text("Delete Shift"),
-                              content: Text("Are you sure you want to delete ${shift.namaShift}?"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(),
-                                  child: const Text("Cancel"),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () async {
-                                    try {
-                                      await shiftController.deleteShift(shift.id!);
-                                      // Pastikan kasir di-unassign dari shift yang dihapus
-                                      final authController = Provider.of<AuthController>(context, listen: false);
-                                      final allUsers = await authController.getAllUsers();
-                                      for (var user in allUsers) {
-                                        if (user['role'] == 'kasir' && user['shift'] == shift.namaShift) {
-                                          await authController.updateUserShift(user['uid'], 'Belum Ditentukan');
-                                        }
-                                      }
-                                      Navigator.of(ctx).pop();
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Shift ${shift.namaShift} berhasil dihapus.')),
-                                      );
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Gagal menghapus shift: $e')),
-                                      );
-                                    }
-                                  },
-                                  child: const Text("Delete"),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showShiftForm(context, Provider.of<app_shift_controller.ShiftController>(context, listen: false), Provider.of<AuthController>(context, listen: false), null);
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: const Color(0xFFC35A2E),
-      ),
-    );
+  State<ShiftManagementPage> createState() => _ShiftManagementPageState();
+}
+
+class _ShiftManagementPageState extends State<ShiftManagementPage> { // State untuk StatefulWidget
+  late Future<List<Shift>> _shiftsFuture;
+  List<Map<String, dynamic>> _allCashiers = []; // Untuk menyimpan data semua kasir
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData(); // Memuat shift dan kasir
   }
 
-  // Modifikasi fungsi _showShiftForm
+  // Fungsi baru untuk memuat kedua jenis data
+  Future<void> _loadData() async {
+    final authController = Provider.of<AuthController>(context, listen: false);
+    final shiftController = Provider.of<app_shift_controller.ShiftController>(context, listen: false);
+
+    // Ambil daftar shift
+    _shiftsFuture = shiftController.fetchShifts().then((_) {
+      return shiftController.shifts;
+    });
+
+    // Ambil daftar kasir
+    try {
+      _allCashiers = await authController.getAllUsers();
+      _allCashiers = _allCashiers.where((user) => user['role'] == 'kasir').toList();
+      setState(() {}); // Memperbarui state setelah kasir dimuat
+    } catch (e) {
+      print('Error loading all cashiers in ShiftManagementPage: $e');
+      // Handle error, mungkin tampilkan pesan ke user
+    }
+  }
+
+
+  // Fungsi _showShiftForm yang sudah ada (tidak perlu diubah di sini)
   void _showShiftForm(BuildContext context, app_shift_controller.ShiftController shiftController, AuthController authController, Shift? shift) async {
     final _formKey = GlobalKey<FormState>();
 
@@ -106,34 +51,18 @@ class ShiftManagementPage extends StatelessWidget {
     final TextEditingController waktuMulaiController = TextEditingController(text: shift?.waktuMulai ?? '07:00');
     final TextEditingController waktuSelesaiController = TextEditingController(text: shift?.waktuSelesai ?? '14:00');
 
-    // --- Ambil daftar kasir DI SINI, sebelum showDialog ---
-    // Ini akan dipanggil setiap kali dialog dibuka
-    List<Map<String, dynamic>> allUsers = await authController.getAllUsers();
-    print('DEBUG: Semua user yang diambil dari Firestore: $allUsers'); // DEBUG LOG
-    
-    List<Map<String, dynamic>> allCashiers = allUsers.where((user) {
-      bool isKasir = (user['role'] == 'kasir');
-      print('DEBUG: User ${user['name']} dengan role ${user['role']} adalah kasir? $isKasir'); // DEBUG LOG
-      return isKasir;
-    }).toList();
-    print('DEBUG: Kasir yang terfilter: $allCashiers'); // DEBUG LOG
+    String? _selectedCashierUid = 'Belum Ditentukan';
 
-    // Variabel untuk menyimpan UID kasir yang terpilih
-    // Inisialisasi dengan 'Belum Ditentukan' jika tidak ada kasir yang ditugaskan ke shift ini
-    String? _selectedCashierUid = 'Belum Ditentukan'; // Default option for dropdown
+    List<Map<String, dynamic>> allUsers = await authController.getAllUsers(); // Ambil lagi untuk dialog
+    List<Map<String, dynamic>> allCashiersInDialog = allUsers.where((user) => user['role'] == 'kasir').toList();
 
-    // Jika mengedit shift yang sudah ada, coba cari kasir yang sudah ditugaskan ke shift ini
     if (shift != null) {
-      final assignedCashier = allCashiers.firstWhere(
+      final assignedCashier = allCashiersInDialog.firstWhere(
         (cashier) => cashier['shift'] == shift.namaShift,
-        orElse: () {
-          print('DEBUG: Tidak ada kasir yang ditemukan untuk shift ${shift.namaShift}'); // DEBUG LOG
-          return {}; // Mengembalikan map kosong jika tidak ditemukan
-        },
+        orElse: () => {},
       );
       if (assignedCashier.isNotEmpty) {
         _selectedCashierUid = assignedCashier['uid'];
-        print('DEBUG: Kasir yang ditugaskan ke ${shift.namaShift} adalah: ${assignedCashier['name']} (UID: ${assignedCashier['uid']})'); // DEBUG LOG
       }
     }
 
@@ -168,14 +97,13 @@ class ShiftManagementPage extends StatelessWidget {
                             initialTime: TimeOfDay.now(),
                             builder: (BuildContext context, Widget? child) {
                               return MediaQuery(
-                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), // Force 24-hour format
+                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
                                 child: child!,
                               );
                             },
                           );
                           if (picked != null) {
                             setState(() {
-                              // Format manual ke HH:MM (24 jam)
                               waktuMulaiController.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
                             });
                           }
@@ -195,14 +123,13 @@ class ShiftManagementPage extends StatelessWidget {
                             initialTime: TimeOfDay.now(),
                             builder: (BuildContext context, Widget? child) {
                               return MediaQuery(
-                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), // Force 24-hour format
+                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
                                 child: child!,
                               );
                             },
                           );
                           if (picked != null) {
                             setState(() {
-                              // Format manual ke HH:MM (24 jam)
                               waktuSelesaiController.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
                             });
                           }
@@ -215,44 +142,35 @@ class ShiftManagementPage extends StatelessWidget {
                       const SizedBox(height: 20),
                       const Text('Pilih Kasir untuk Shift Ini:', style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
-                      // Dropdown untuk memilih kasir tunggal
                       DropdownButtonFormField<String>(
                         value: _selectedCashierUid,
                         hint: const Text('Pilih Kasir'),
                         decoration: const InputDecoration(labelText: 'Kasir'),
                         items: [
-                          // Opsi 'Belum Ditentukan'
                           const DropdownMenuItem<String>(
                             value: 'Belum Ditentukan',
                             child: Text('Belum Ditentukan'),
                           ),
-                          // Opsi dari daftar kasir
-                          // Tambahkan pengecekan allCashiers.isNotEmpty di sini
-                          if (allCashiers.isNotEmpty)
-                            ...allCashiers.map((cashier) {
-                              print('DEBUG: Menambahkan kasir ke dropdown: ${cashier['name']} (UID: ${cashier['uid']})'); // DEBUG LOG
+                          if (allCashiersInDialog.isNotEmpty) // Menggunakan allCashiersInDialog di sini
+                            ...allCashiersInDialog.map((cashier) {
                               return DropdownMenuItem<String>(
                                 value: cashier['uid'],
                                 child: Text(cashier['name'] ?? cashier['email']),
                               );
                             }).toList(),
-                          // Opsional: jika allCashiers kosong dan tidak ada "Belum Ditentukan"
-                          if (allCashiers.isEmpty && _selectedCashierUid == 'Belum Ditentukan')
+                          if (allCashiersInDialog.isEmpty && _selectedCashierUid == 'Belum Ditentukan')
                             const DropdownMenuItem<String>(
                                 value: 'NO_CASHIER_AVAILABLE',
                                 child: Text('Tidak ada kasir tersedia'),
-                                enabled: false, // Opsi ini tidak bisa dipilih
+                                enabled: false,
                             ),
                         ],
                         onChanged: (String? newValue) {
                           setState(() {
                             _selectedCashierUid = newValue;
-                            print('DEBUG: Kasir dipilih: $_selectedCashierUid'); // DEBUG LOG
                           });
                         },
                         validator: (value) {
-                          // Validator opsional: jika shift memerlukan kasir
-                          // if (value == null || value == 'Belum Ditentukan') return 'Harap pilih seorang kasir.';
                           return null;
                         },
                       ),
@@ -271,51 +189,40 @@ class ShiftManagementPage extends StatelessWidget {
                       final newOrUpdatedShift = Shift(
                         id: shift?.id,
                         namaShift: namaShiftController.text,
-                        shiftType: namaShiftController.text, // shiftType sama dengan namaShift
+                        shiftType: namaShiftController.text,
                         waktuMulai: waktuMulaiController.text,
                         waktuSelesai: waktuSelesaiController.text,
                       );
 
                       try {
-                        // 1. Simpan/Update Definisi Shift
                         if (shift == null) {
                           await shiftController.addShift(newOrUpdatedShift);
                         } else {
                           await shiftController.updateShift(newOrUpdatedShift);
                         }
 
-                        // 2. Perbarui Penugasan Kasir
                         final String shiftNameForAssignment = newOrUpdatedShift.namaShift;
 
-                        // Iterasi semua kasir
-                        for (var cashier in allCashiers) {
+                        for (var cashier in allCashiersInDialog) { // Menggunakan allCashiersInDialog di sini
                           final String cashierUid = cashier['uid'];
                           final String? currentCashierShift = cashier['shift'];
 
                           if (cashierUid == _selectedCashierUid) {
-                            // Ini adalah kasir yang BARU dipilih untuk shift ini
                             if (_selectedCashierUid != 'Belum Ditentukan' && currentCashierShift != shiftNameForAssignment) {
                                await authController.updateUserShift(cashierUid, shiftNameForAssignment);
-                               print('DEBUG: Menugaskan $cashierUid ke $shiftNameForAssignment'); // DEBUG LOG
                             } else if (_selectedCashierUid == 'Belum Ditentukan' && currentCashierShift == shiftNameForAssignment) {
-                               // Jika sebelumnya di shift ini tapi sekarang dipilih "Belum Ditentukan"
                                await authController.updateUserShift(cashierUid, 'Belum Ditentukan');
-                               print('DEBUG: Melepaskan $cashierUid dari $shiftNameForAssignment (dipilih Belum Ditentukan)'); // DEBUG LOG
                             }
                           } else if (currentCashierShift == shiftNameForAssignment) {
-                            // Ini adalah kasir lain yang sebelumnya ditugaskan ke shift ini,
-                            // tapi sekarang kasir lain dipilih (atau shift ini tidak punya kasir yang dipilih)
                             await authController.updateUserShift(cashierUid, 'Belum Ditentukan');
-                            print('DEBUG: Melepaskan $cashierUid dari $shiftNameForAssignment (kasir lain dipilih)'); // DEBUG LOG
                           }
-                          // Jika kasirUid bukan yang dipilih dan shiftnya bukan shift ini, biarkan saja.
                         }
-
 
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Shift ${newOrUpdatedShift.namaShift} berhasil disimpan dan penugasan kasir diperbarui!')),
                         );
-                        shiftController.fetchShifts();
+                        // Setelah menyimpan, muat ulang semua data (shift dan kasir)
+                        await _loadData(); // Panggil _loadData untuk refresh tampilan utama
                         Navigator.of(ctx).pop();
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -331,6 +238,106 @@ class ShiftManagementPage extends StatelessWidget {
           },
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Ambil instance controller (tidak perlu listen di sini karena sudah ada di _loadData)
+    final shiftController = Provider.of<app_shift_controller.ShiftController>(context);
+    final authController = Provider.of<AuthController>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Kelola Shift'),
+        backgroundColor: const Color(0xFFC35A2E),
+        foregroundColor: Colors.white,
+      ),
+      body: FutureBuilder<List<Shift>>( // FutureBuilder untuk daftar Shift
+        future: _shiftsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Tidak ada shift ditemukan. Tambahkan satu!'));
+          } else {
+            return ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (context, index) {
+                final shift = snapshot.data![index];
+                // Cari kasir yang ditugaskan ke shift ini
+                final assignedCashier = _allCashiers.firstWhere(
+                  (cashier) => cashier['shift'] == shift.namaShift,
+                  orElse: () => {'name': 'Belum Ditentukan', 'email': ''}, // Default jika tidak ada kasir yang ditugaskan
+                );
+                final String cashierName = assignedCashier['name'] ?? assignedCashier['email'];
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: ListTile(
+                    title: Text("${shift.namaShift} (${shift.shiftType})"),
+                    subtitle: Text("Pukul: ${shift.waktuMulai} - ${shift.waktuSelesai}\nKasir: $cashierName"), // Tampilkan kasir yang bertugas
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            _showShiftForm(context, shiftController, authController, shift);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text("Delete Shift"),
+                                content: Text("Yakin ingin menghapus shift ${shift.namaShift}?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      try {
+                                        await shiftController.deleteShift(shift.id!);
+                                        final allCurrentUsers = await authController.getAllUsers();
+                                        for (var user in allCurrentUsers) {
+                                          if (user['role'] == 'kasir' && user['shift'] == shift.namaShift) {
+                                            await authController.updateUserShift(user['uid'], 'Belum Ditentukan');
+                                          }
+                                        }
+                                        await _loadData(); // Refresh data setelah penghapusan
+                                        Navigator.of(ctx).pop();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Shift ${shift.namaShift} berhasil dihapus.')),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Gagal menghapus shift: $e')),
+                                        );
+                                      }
+                                    },
+                                    child: const Text("Delete"),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        },
+      ),
     );
   }
 }
