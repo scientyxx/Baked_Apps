@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 class OrderController with ChangeNotifier {
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   List<Transaksi> _transaksiItems = [];
   List<Pembayaran> _pembayaranItems = [];
@@ -136,6 +137,7 @@ class OrderController with ChangeNotifier {
     required String idOrder,
     required String metodeBayar,
     required double totalPembayaran,
+    required List<app_order_model.Order> orderedItems,
   }) async {
     DatabaseReference pembayaranRef = _databaseRef.child('pembayaran');
     String paymentId = pembayaranRef.push().key!;
@@ -148,12 +150,59 @@ class OrderController with ChangeNotifier {
       totalPembayaran: totalPembayaran,
     );
 
-    print("Attempting to save Pembayaran: ${newPembayaran.toJson()} with ID: $paymentId");
+    print("DEBUG_PAYMENT: Attempting to save Pembayaran: ${newPembayaran.toJson()} with ID: $paymentId");
 
-    await pembayaranRef.child(newPembayaran.id!).set(newPembayaran.toJson()).then((_) {
-      print("Pembayaran added successfully for Order ID: $idOrder, Method: $metodeBayar");
+    await pembayaranRef.child(newPembayaran.id!).set(newPembayaran.toJson()).then((_) async {
+      print("DEBUG_PAYMENT: Pembayaran added successfully for Order ID: $idOrder, Method: $metodeBayar");
+
+      // --- MULAI: Logika Pengurangan Stok dengan Debugging Tambahan ---
+      print("DEBUG_STOCK: Memulai proses pengurangan stok untuk order: $idOrder");
+      for (var orderItem in orderedItems) {
+        print("DEBUG_STOCK: Memproses item: ${orderItem.name}, Kuantitas: ${orderItem.quantity}");
+        try {
+          // Dapatkan dokumen katalog yang sesuai
+          // Menggunakan Firestore untuk katalog
+          QuerySnapshot katalogSnapshot = await _firestore
+              .collection('katalog')
+              .where('nama_makanan', isEqualTo: orderItem.name)
+              .limit(1)
+              .get();
+
+          if (katalogSnapshot.docs.isNotEmpty) {
+            DocumentSnapshot katalogDoc = katalogSnapshot.docs.first;
+            String docId = katalogDoc.id; // Dapatkan ID dokumen katalog
+            String itemNamaMakananInFirestore = (katalogDoc.data() as Map<String, dynamic>?)?['nama_makanan'] ?? 'N/A';
+            int currentStock = (katalogDoc.data() as Map<String, dynamic>?)?['stock'] as int? ?? 0;
+            int newStock = currentStock - orderItem.quantity;
+
+            if (newStock < 0) newStock = 0; // Pastikan stok tidak negatif
+
+            print("DEBUG_STOCK: Item ditemukan di Firestore. Doc ID: $docId, Nama: $itemNamaMakananInFirestore");
+            print("DEBUG_STOCK: Stok saat ini: $currentStock, Kuantitas dibeli: ${orderItem.quantity}, Stok baru: $newStock");
+
+            await _firestore.collection('katalog').doc(docId).update({
+              'stock': newStock,
+            }).then((_) {
+              print("DEBUG_STOCK: Stok untuk ${orderItem.name} berhasil diupdate ke $newStock di Firestore.");
+            }).catchError((error) {
+              print("DEBUG_STOCK: GAGAL mengupdate stok untuk ${orderItem.name} di Firestore: $error");
+              if (error is FirebaseException) {
+                print("Firebase Error Code: ${error.code}, Message: ${error.message}");
+              }
+            });
+
+          } else {
+            print("DEBUG_STOCK: WARNING! Item katalog ${orderItem.name} TIDAK DITEMUKAN di Firestore saat update stok.");
+          }
+        } catch (e) {
+          print("DEBUG_STOCK: Error umum saat mengupdate stok untuk ${orderItem.name}: $e");
+        }
+      }
+      print("DEBUG_STOCK: Proses pengurangan stok selesai.");
+      // --- SELESAI: Logika Pengurangan Stok ---
+
     }).catchError((error) {
-      print("Error adding pembayaran to Firebase: $error");
+      print("DEBUG_PAYMENT: Error menambahkan pembayaran ke Firebase: $error");
       if (error is FirebaseException) {
         print("Firebase Error Code: ${error.code}");
         print("Firebase Error Message: ${error.message}");

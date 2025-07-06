@@ -136,10 +136,10 @@ class _CashierScanPageState extends State<CashierScanPage> {
       }
 
       Map<String, dynamic>? cashierProfile = await authController.getCashierProfile(cashierId);
-      
+
       if (cashierProfile != null) {
         cashierName = cashierProfile['name'] as String?;
-        cashierShift = cashierProfile['shift'] as String? ?? 'Belum Ditentukan'; 
+        cashierShift = cashierProfile['shift'] as String? ?? 'Belum Ditentukan';
       }
 
       if (cashierName == null) {
@@ -148,37 +148,32 @@ class _CashierScanPageState extends State<CashierScanPage> {
       }
 
       // --- MULAI: Modifikasi Pembentukan uniqueOrderId ---
-      String customerNamePrefix = 'CUS'; // Default jika tidak ada nama customer
-      String firstItemNamePrefix = 'ITEM'; // Default jika tidak ada item
-      String yearLastTwoDigits = DateTime.now().year.toString().substring(2, 4); // Ambil 2 digit terakhir tahun
+      String customerNamePrefix = 'CUS';
+      String firstItemNamePrefix = 'ITEM';
+      String yearLastTwoDigits = DateTime.now().year.toString().substring(2, 4);
 
-      // Dapatkan customer ID dan nama dari order yang discan
       String? customerIdFromOrder = scannedOrders.first.customerId;
       String? actualCustomerName;
       if (customerIdFromOrder != null && customerIdFromOrder != 'guest_via_qr') {
-          // Asumsi ada metode di AuthController untuk mendapatkan profil customer berdasarkan ID
-          // Atau, jika nama customer sudah ada di objek Order, gunakan itu
-          Map<String, dynamic>? customerProfile = await authController.getCashierProfile(customerIdFromOrder); // Menggunakan getCashierProfile sementara, idealnya getCustomerProfile
+          // Menggunakan getCashierProfile sementara untuk mendapatkan nama customer
+          // Idealnya, jika ada, gunakan metode getCustomerProfile terpisah
+          Map<String, dynamic>? customerProfile = await authController.getCashierProfile(customerIdFromOrder);
           if (customerProfile != null) {
               actualCustomerName = customerProfile['name'] as String?;
           }
       }
 
-      // Potong 3 huruf pertama dari nama customer (jika ada)
       if (actualCustomerName != null && actualCustomerName.isNotEmpty) {
           customerNamePrefix = actualCustomerName.substring(0, actualCustomerName.length > 3 ? 3 : actualCustomerName.length).toUpperCase();
       }
 
-      // Potong 3 huruf pertama dari nama item pertama (jika ada)
       if (scannedOrders.isNotEmpty && scannedOrders.first.name.isNotEmpty) {
           firstItemNamePrefix = scannedOrders.first.name.substring(0, scannedOrders.first.name.length > 3 ? 3 : scannedOrders.first.name.length).toUpperCase();
       }
 
-      // Dapatkan nomor urut dari Firestore
-      int sequenceNumber = await authController.getNextOrderSequence(); // PANGGIL FUNGSI BARU DI AUTHCONTROLLER
-      String formattedSequence = sequenceNumber.toString().padLeft(4, '0'); // Format ke 4 digit (misal 1 -> 0001)
+      int sequenceNumber = await authController.getNextOrderSequence();
+      String formattedSequence = sequenceNumber.toString().padLeft(4, '0');
 
-      // Bentuk uniqueOrderId
       String uniqueOrderId = '${customerNamePrefix}-${firstItemNamePrefix}-${yearLastTwoDigits}-${formattedSequence}';
       // --- SELESAI: Modifikasi Pembentukan uniqueOrderId ---
 
@@ -195,7 +190,7 @@ class _CashierScanPageState extends State<CashierScanPage> {
           if (correspondingKatalogItem != null && correspondingKatalogItem.id != null) {
             await orderController.addOrUpdateTransaksiFromOrder(
               orderItem: itemInOrder,
-              idCustomer: customerIdFromOrder ?? 'guest_via_qr', // Pastikan customerIdFromOrder tidak null
+              idCustomer: customerIdFromOrder ?? 'guest_via_qr',
               idMakananKatalog: correspondingKatalogItem.id!,
               idOrderOverall: uniqueOrderId,
               idCashier: cashierId,
@@ -211,6 +206,7 @@ class _CashierScanPageState extends State<CashierScanPage> {
           idOrder: uniqueOrderId,
           metodeBayar: selectedPaymentMethod,
           totalPembayaran: totalOrderPrice,
+          orderedItems: scannedOrders, // <--- TAMBAHKAN ARGUMEN INI
         );
 
         ScaffoldMessenger.of(context).showSnackBar(

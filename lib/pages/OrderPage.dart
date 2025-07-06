@@ -65,14 +65,31 @@ class OrderPage extends StatelessWidget {
           if (orderProvider.orders.isNotEmpty) {
             return FloatingActionButton.extended(
               onPressed: () async {
-                // --- PERBAIKI: Dapatkan authController di sini ---
                 final authController = Provider.of<AuthController>(context, listen: false);
-                // --------------------------------------------------
 
                 String? customerIdForQr = authController.currentUser?.uid; // ID pelanggan yang login
                 if (customerIdForQr == null) {
-                  customerIdForQr = 'guest_user'; // Atau ID guest yang lebih unik
+                  customerIdForQr = 'guest_user'; // Atau ID guest yang lebih unik jika tidak login
                 }
+
+                // Periksa stok sebelum membuat QR Code
+                // Iterasi orders di keranjang
+                for (var orderInCart in orderProvider.orders) {
+                  // Panggil updateOrderQuantity untuk memicu cek stok
+                  // Jika ada item yang stoknya kurang, updateOrderQuantity akan menampilkan SnackBar
+                  // dan tidak mengubah orderProvider.orders (karena tidak cukup stok)
+                  // Jadi kita cek lagi quantity-nya setelah dipanggil
+                  int originalQuantity = orderInCart.quantity;
+                  await orderProvider.updateOrderQuantity(context, orderInCart, originalQuantity); // Memastikan stok valid
+
+                  // Jika quantity di keranjang berubah (berarti stok tidak cukup),
+                  // kita bisa berikan feedback dan hentikan proses.
+                  if (orderProvider.getOrderQuantity(orderInCart.name) < originalQuantity) {
+                    // SnackBar sudah muncul dari OrderProvider.updateOrderQuantity
+                    return; // Hentikan proses Generate QR jika ada item yang stoknya tidak cukup
+                  }
+                }
+
 
                 final List<Order> ordersForQr = orderProvider.orders.map((order) {
                   return order.copyWith(customerId: customerIdForQr); // Tambahkan customerId ke setiap order
@@ -107,12 +124,14 @@ class OrderItemWidget extends StatelessWidget {
   const OrderItemWidget({Key? key, required this.order}) : super(key: key);
 
   void _incrementQuantity(BuildContext context) {
+    // Mempassing context ke updateOrderQuantity
     Provider.of<OrderProvider>(context, listen: false)
-        .updateOrderQuantity(order, order.quantity + 1);
+        .updateOrderQuantity(context, order, order.quantity + 1);
   }
 
   void _decrementQuantity(BuildContext context) {
-    Provider.of<OrderProvider>(context, listen: false).updateOrderQuantity(order, order.quantity - 1);
+    // Mempassing context ke updateOrderQuantity
+    Provider.of<OrderProvider>(context, listen: false).updateOrderQuantity(context, order, order.quantity - 1);
   }
 
   @override

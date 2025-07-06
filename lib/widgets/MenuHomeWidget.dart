@@ -24,17 +24,19 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
     }
   }
 
-  void updateCart(Katalog item, int quantity) {
+  // Modifikasi updateCart untuk passing context
+  void updateCart(BuildContext context, Katalog item, int quantity) { // TAMBAHKAN BuildContext context di sini
     if (mounted) {
       try {
         final orderProvider = Provider.of<OrderProvider>(context, listen: false);
-        Order order = Order( // Selalu buat objek Order baru atau copyWith
+        Order order = Order(
           name: item.namaMakanan,
           price: item.harga.toDouble(),
           quantity: quantity,
           imagePath: item.imagePath,
         );
-        orderProvider.updateOrderQuantity(order, quantity);
+        // Panggil updateOrderQuantity dengan context
+        orderProvider.updateOrderQuantity(context, order, quantity); // PASS context ke OrderProvider
       } catch (e) {
         print('Error updating cart: $e');
       }
@@ -106,7 +108,8 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
                     key: ValueKey(menuController.menuItems[index].namaMakanan),
                     item: menuController.menuItems[index],
                     formatCurrency: formatCurrency,
-                    updateCart: updateCart,
+                    // Sesuaikan updateCart di sini untuk passing context
+                    updateCart: (Katalog item, int quantity) => updateCart(context, item, quantity), // PASS context
                   );
                 },
               ),
@@ -118,6 +121,7 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
   }
 }
 
+// MenuHomeItemWidget tetap sama
 class MenuHomeItemWidget extends StatefulWidget {
   final Katalog item;
   final String Function(double) formatCurrency;
@@ -135,21 +139,14 @@ class MenuHomeItemWidget extends StatefulWidget {
 }
 
 class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
-  int quantity = 0;
-
-  // Hapus initState dan didChangeDependencies di sini
-  // Kita akan menggunakan Consumer untuk kuantitas
+  // `quantity` sekarang akan langsung mencerminkan nilai dari OrderProvider
+  // tidak perlu `initState` atau `didChangeDependencies` untuk inisialisasi awal.
 
   @override
   Widget build(BuildContext context) {
     // DENGAR PERUBAHAN ORDERPROVIDER LANGSUNG DI BUILD METHOD
     final currentQuantity = Provider.of<OrderProvider>(context, listen: true)
         .getOrderQuantity(widget.item.namaMakanan);
-
-    // Perbarui quantity lokal jika berbeda
-    if (currentQuantity != quantity) {
-      quantity = currentQuantity;
-    }
 
     return Container(
       decoration: BoxDecoration(
@@ -165,7 +162,7 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
             height: 100,
@@ -195,12 +192,12 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           widget.item.namaMakanan,
@@ -210,14 +207,18 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 4),
                         Text(
+                          // Harga yang ditampilkan harus harga per item, bukan total
+                          // atau total jika quantity > 0
                           widget.formatCurrency(widget.item.harga),
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey[700],
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -229,15 +230,15 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                       children: [
                         InkWell(
                           onTap: () {
-                            if (quantity > 0) {
-                              widget.updateCart(widget.item, quantity - 1);
+                            if (currentQuantity > 0) { // Gunakan currentQuantity
+                              widget.updateCart(widget.item, currentQuantity - 1);
                             }
                           },
                           child: Container(
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
+                              color: const Color(0xFFC35A2E),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Icon(
@@ -248,7 +249,7 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                           ),
                         ),
                         Text(
-                          quantity.toString(),
+                          currentQuantity.toString(), // Tampilkan currentQuantity
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -256,13 +257,13 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                         ),
                         InkWell(
                           onTap: () {
-                            widget.updateCart(widget.item, quantity + 1);
+                            widget.updateCart(widget.item, currentQuantity + 1); // Gunakan currentQuantity
                           },
                           child: Container(
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
+                              color: const Color(0xFFC35A2E),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Icon(
