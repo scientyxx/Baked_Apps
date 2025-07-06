@@ -9,11 +9,11 @@ class ShiftController with ChangeNotifier {
   List<Shift> get shifts => _shifts;
 
   ShiftController() {
-    _fetchShifts();
+    fetchShifts(); // Memanggil versi publik dari fetchShifts
   }
 
-  // Mengambil semua definisi shift dari Firestore
-  Future<void> _fetchShifts() async {
+  // Mengambil semua definisi shift dari Firestore (sekarang publik)
+  Future<void> fetchShifts() async { // Mengubah _fetchShifts() menjadi fetchShifts()
     try {
       _shifts.clear(); // Bersihkan daftar sebelum memuat ulang
       QuerySnapshot snapshot = await _firestore.collection('shifts').get();
@@ -32,7 +32,7 @@ class ShiftController with ChangeNotifier {
   Future<void> addShift(Shift shift) async {
     try {
       await _firestore.collection('shifts').add(shift.toJson());
-      await _fetchShifts(); // Refresh daftar setelah menambah
+      await fetchShifts(); // Refresh daftar setelah menambah
     } catch (e) {
       print("Error adding shift: $e");
     }
@@ -43,7 +43,7 @@ class ShiftController with ChangeNotifier {
     try {
       if (shift.id != null) {
         await _firestore.collection('shifts').doc(shift.id).update(shift.toJson());
-        await _fetchShifts(); // Refresh daftar setelah mengedit
+        await fetchShifts(); // Refresh daftar setelah mengedit
       } else {
         print("Error: Cannot update shift without an ID.");
       }
@@ -56,7 +56,7 @@ class ShiftController with ChangeNotifier {
   Future<void> deleteShift(String id) async {
     try {
       await _firestore.collection('shifts').doc(id).delete();
-      await _fetchShifts(); // Refresh daftar setelah menghapus
+      await fetchShifts(); // Refresh daftar setelah menghapus
     } catch (e) {
       print("Error deleting shift: $e");
     }
