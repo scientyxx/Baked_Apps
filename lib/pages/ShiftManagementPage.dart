@@ -109,7 +109,14 @@ class ShiftManagementPage extends StatelessWidget {
     // --- Ambil daftar kasir DI SINI, sebelum showDialog ---
     // Ini akan dipanggil setiap kali dialog dibuka
     List<Map<String, dynamic>> allUsers = await authController.getAllUsers();
-    List<Map<String, dynamic>> allCashiers = allUsers.where((user) => user['role'] == 'kasir').toList(); // Filter role kasir
+    print('DEBUG: Semua user yang diambil dari Firestore: $allUsers'); // DEBUG LOG
+    
+    List<Map<String, dynamic>> allCashiers = allUsers.where((user) {
+      bool isKasir = (user['role'] == 'kasir');
+      print('DEBUG: User ${user['name']} dengan role ${user['role']} adalah kasir? $isKasir'); // DEBUG LOG
+      return isKasir;
+    }).toList();
+    print('DEBUG: Kasir yang terfilter: $allCashiers'); // DEBUG LOG
 
     // Variabel untuk menyimpan UID kasir yang terpilih
     // Inisialisasi dengan 'Belum Ditentukan' jika tidak ada kasir yang ditugaskan ke shift ini
@@ -119,10 +126,14 @@ class ShiftManagementPage extends StatelessWidget {
     if (shift != null) {
       final assignedCashier = allCashiers.firstWhere(
         (cashier) => cashier['shift'] == shift.namaShift,
-        orElse: () => {}, // Mengembalikan map kosong jika tidak ditemukan
+        orElse: () {
+          print('DEBUG: Tidak ada kasir yang ditemukan untuk shift ${shift.namaShift}'); // DEBUG LOG
+          return {}; // Mengembalikan map kosong jika tidak ditemukan
+        },
       );
       if (assignedCashier.isNotEmpty) {
         _selectedCashierUid = assignedCashier['uid'];
+        print('DEBUG: Kasir yang ditugaskan ke ${shift.namaShift} adalah: ${assignedCashier['name']} (UID: ${assignedCashier['uid']})'); // DEBUG LOG
       }
     }
 
@@ -216,16 +227,27 @@ class ShiftManagementPage extends StatelessWidget {
                             child: Text('Belum Ditentukan'),
                           ),
                           // Opsi dari daftar kasir
-                          ...allCashiers.map((cashier) {
-                            return DropdownMenuItem<String>(
-                              value: cashier['uid'],
-                              child: Text(cashier['name'] ?? cashier['email']),
-                            );
-                          }).toList(),
+                          // Tambahkan pengecekan allCashiers.isNotEmpty di sini
+                          if (allCashiers.isNotEmpty)
+                            ...allCashiers.map((cashier) {
+                              print('DEBUG: Menambahkan kasir ke dropdown: ${cashier['name']} (UID: ${cashier['uid']})'); // DEBUG LOG
+                              return DropdownMenuItem<String>(
+                                value: cashier['uid'],
+                                child: Text(cashier['name'] ?? cashier['email']),
+                              );
+                            }).toList(),
+                          // Opsional: jika allCashiers kosong dan tidak ada "Belum Ditentukan"
+                          if (allCashiers.isEmpty && _selectedCashierUid == 'Belum Ditentukan')
+                            const DropdownMenuItem<String>(
+                                value: 'NO_CASHIER_AVAILABLE',
+                                child: Text('Tidak ada kasir tersedia'),
+                                enabled: false, // Opsi ini tidak bisa dipilih
+                            ),
                         ],
                         onChanged: (String? newValue) {
                           setState(() {
                             _selectedCashierUid = newValue;
+                            print('DEBUG: Kasir dipilih: $_selectedCashierUid'); // DEBUG LOG
                           });
                         },
                         validator: (value) {
@@ -272,17 +294,19 @@ class ShiftManagementPage extends StatelessWidget {
 
                           if (cashierUid == _selectedCashierUid) {
                             // Ini adalah kasir yang BARU dipilih untuk shift ini
-                            // Kita perbarui shift-nya, KECUALI jika yang dipilih adalah 'Belum Ditentukan'
                             if (_selectedCashierUid != 'Belum Ditentukan' && currentCashierShift != shiftNameForAssignment) {
                                await authController.updateUserShift(cashierUid, shiftNameForAssignment);
+                               print('DEBUG: Menugaskan $cashierUid ke $shiftNameForAssignment'); // DEBUG LOG
                             } else if (_selectedCashierUid == 'Belum Ditentukan' && currentCashierShift == shiftNameForAssignment) {
                                // Jika sebelumnya di shift ini tapi sekarang dipilih "Belum Ditentukan"
                                await authController.updateUserShift(cashierUid, 'Belum Ditentukan');
+                               print('DEBUG: Melepaskan $cashierUid dari $shiftNameForAssignment (dipilih Belum Ditentukan)'); // DEBUG LOG
                             }
                           } else if (currentCashierShift == shiftNameForAssignment) {
                             // Ini adalah kasir lain yang sebelumnya ditugaskan ke shift ini,
                             // tapi sekarang kasir lain dipilih (atau shift ini tidak punya kasir yang dipilih)
                             await authController.updateUserShift(cashierUid, 'Belum Ditentukan');
+                            print('DEBUG: Melepaskan $cashierUid dari $shiftNameForAssignment (kasir lain dipilih)'); // DEBUG LOG
                           }
                           // Jika kasirUid bukan yang dipilih dan shiftnya bukan shift ini, biarkan saja.
                         }
