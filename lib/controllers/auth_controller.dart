@@ -22,8 +22,8 @@ class AuthController with ChangeNotifier {
           'email': email,
           'name': name,
           'address': address,
-          'role': role, // Menggunakan parameter role
-          'shift': shift, // Menambahkan field shift
+          'role': role,
+          'shift': shift,
         });
       }
       notifyListeners();
@@ -91,21 +91,21 @@ class AuthController with ChangeNotifier {
     }
   }
 
-  // --- Metode Baru: Update Shift Pengguna oleh Admin ---
+  // Metode: Update Shift Pengguna oleh Admin
   Future<void> updateUserShift(String uid, String newShift) async {
     try {
       await _firestore.collection('users').doc(uid).update({
         'shift': newShift,
       });
       print("Shift for user $uid updated to $newShift");
-      notifyListeners(); // Beri tahu listener jika ada yang memantau perubahan user
+      notifyListeners();
     } catch (e) {
       print("Error updating shift for user $uid: $e");
       throw Exception('Failed to update user shift: $e');
     }
   }
 
-  // --- Metode Baru: Mendapatkan Semua Pengguna (untuk Admin) ---
+  // --- Metode: Mendapatkan Semua Pengguna (untuk Admin) ---
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('users').get();
@@ -114,11 +114,34 @@ class AuthController with ChangeNotifier {
         'email': doc['email'],
         'name': doc['name'],
         'role': doc['role'],
-        'shift': doc['shift'], // Pastikan field shift ada
+        'shift': doc['shift'],
       }).toList();
     } catch (e) {
       print("Error fetching all users: $e");
       return [];
+    }
+  }
+  // ---------------------------------------------------
+
+  // Tambahkan metode getNextOrderSequence() di sini
+  // --- Metode Baru: Mendapatkan nomor urut order ---
+  Future<int> getNextOrderSequence() async {
+    final docRef = _firestore.collection('counters').doc('orderIdSequence');
+    try {
+      return await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        int currentSequence = 0;
+        if (snapshot.exists) {
+          currentSequence = (snapshot.data()?['sequence'] as int?) ?? 0;
+        }
+        int nextSequence = currentSequence + 1;
+        transaction.set(docRef, {'sequence': nextSequence});
+        return nextSequence;
+      });
+    } catch (e) {
+      print("Error getting next order sequence: $e");
+      // Fallback: Jika gagal, gunakan timestamp, tapi ini tidak ideal untuk sequential
+      return DateTime.now().millisecondsSinceEpoch % 10000;
     }
   }
   // ---------------------------------------------------

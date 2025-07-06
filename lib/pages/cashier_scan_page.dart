@@ -72,10 +72,6 @@ class _CashierScanPageState extends State<CashierScanPage> {
     }
   }
 
-  // --- FUNGSI _determineShift() DIHAPUS DARI SINI ---
-  // Karena shift akan diambil dari profil kasir di Firestore
-  // ---------------------------------------------------
-
   Future<void> _processPaymentInitiation() async {
     if (scannedOrders.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,7 +126,7 @@ class _CashierScanPageState extends State<CashierScanPage> {
 
       String? cashierId = authController.currentUser?.uid;
       String? cashierName;
-      String? cashierShift; // <--- Variabel untuk shift kasir
+      String? cashierShift;
 
       if (cashierId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -139,27 +135,52 @@ class _CashierScanPageState extends State<CashierScanPage> {
         return;
       }
 
-      // Ambil nama dan shift kasir dari Firestore menggunakan AuthController
       Map<String, dynamic>? cashierProfile = await authController.getCashierProfile(cashierId);
+      
       if (cashierProfile != null) {
         cashierName = cashierProfile['name'] as String?;
-        cashierShift = cashierProfile['shift'] as String?; // <--- AMBIL SHIFT DARI PROFIL
+        cashierShift = cashierProfile['shift'] as String? ?? 'Belum Ditentukan'; 
       }
 
       if (cashierName == null) {
         print("Warning: Cashier name not found for UID: $cashierId. Using UID as name.");
         cashierName = cashierId;
       }
-      if (cashierShift == null) {
-        print("Warning: Cashier shift not found for UID: $cashierId. Using 'Unknown' as shift.");
-        cashierShift = 'Unknown'; // Fallback jika shift tidak ditemukan
+
+      // --- MULAI: Modifikasi Pembentukan uniqueOrderId ---
+      String customerNamePrefix = 'CUS'; // Default jika tidak ada nama customer
+      String firstItemNamePrefix = 'ITEM'; // Default jika tidak ada item
+      String yearLastTwoDigits = DateTime.now().year.toString().substring(2, 4); // Ambil 2 digit terakhir tahun
+
+      // Dapatkan customer ID dan nama dari order yang discan
+      String? customerIdFromOrder = scannedOrders.first.customerId;
+      String? actualCustomerName;
+      if (customerIdFromOrder != null && customerIdFromOrder != 'guest_via_qr') {
+          // Asumsi ada metode di AuthController untuk mendapatkan profil customer berdasarkan ID
+          // Atau, jika nama customer sudah ada di objek Order, gunakan itu
+          Map<String, dynamic>? customerProfile = await authController.getCashierProfile(customerIdFromOrder); // Menggunakan getCashierProfile sementara, idealnya getCustomerProfile
+          if (customerProfile != null) {
+              actualCustomerName = customerProfile['name'] as String?;
+          }
       }
 
+      // Potong 3 huruf pertama dari nama customer (jika ada)
+      if (actualCustomerName != null && actualCustomerName.isNotEmpty) {
+          customerNamePrefix = actualCustomerName.substring(0, actualCustomerName.length > 3 ? 3 : actualCustomerName.length).toUpperCase();
+      }
 
-      String customerIdFromOrder = scannedOrders.first.customerId ?? 'guest_via_qr';
+      // Potong 3 huruf pertama dari nama item pertama (jika ada)
+      if (scannedOrders.isNotEmpty && scannedOrders.first.name.isNotEmpty) {
+          firstItemNamePrefix = scannedOrders.first.name.substring(0, scannedOrders.first.name.length > 3 ? 3 : scannedOrders.first.name.length).toUpperCase();
+      }
 
-      String uniqueOrderId = scannedOrders.first.name.replaceAll(RegExp(r'[.#$\[\]/]'), '_') +
-                             DateTime.now().millisecondsSinceEpoch.toString();
+      // Dapatkan nomor urut dari Firestore
+      int sequenceNumber = await authController.getNextOrderSequence(); // PANGGIL FUNGSI BARU DI AUTHCONTROLLER
+      String formattedSequence = sequenceNumber.toString().padLeft(4, '0'); // Format ke 4 digit (misal 1 -> 0001)
+
+      // Bentuk uniqueOrderId
+      String uniqueOrderId = '${customerNamePrefix}-${firstItemNamePrefix}-${yearLastTwoDigits}-${formattedSequence}';
+      // --- SELESAI: Modifikasi Pembentukan uniqueOrderId ---
 
       try {
         for (Order itemInOrder in scannedOrders) {
@@ -174,12 +195,12 @@ class _CashierScanPageState extends State<CashierScanPage> {
           if (correspondingKatalogItem != null && correspondingKatalogItem.id != null) {
             await orderController.addOrUpdateTransaksiFromOrder(
               orderItem: itemInOrder,
-              idCustomer: customerIdFromOrder,
+              idCustomer: customerIdFromOrder ?? 'guest_via_qr', // Pastikan customerIdFromOrder tidak null
               idMakananKatalog: correspondingKatalogItem.id!,
               idOrderOverall: uniqueOrderId,
               idCashier: cashierId,
               namaCashier: cashierName,
-              shift: cashierShift, // <--- KIRIM SHIFT DARI PROFIL KASIR
+              shift: cashierShift,
             );
           } else {
             print("Warning: Skipping item ${itemInOrder.name}. Katalog item or ID not found.");
