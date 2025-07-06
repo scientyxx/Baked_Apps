@@ -1,3 +1,4 @@
+import 'package:baked/controllers/auth_controller.dart'; // Pastikan ini diimport
 import 'package:baked/models/order.dart';
 import 'package:baked/pages/QrCodePage.dart';
 import 'package:baked/providers/order_provider.dart';
@@ -8,45 +9,109 @@ class OrderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Your Orders'),
-        actions: [
-          Consumer<OrderProvider>(
-            builder: (context, orderProvider, child) {
-              if (orderProvider.orders.isNotEmpty) {
-                return IconButton(
-                  icon: Icon(Icons.qr_code),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            QrCodePage(orders: orderProvider.orders),
-                      ),
-                    );
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.only(right: 20, left: 15, top: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  "images/logo.png",
+                  height: 100,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Your Order",
+                  style: TextStyle(
+                    fontSize: 35,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Consumer<OrderProvider>(
+              builder: (context, orderProvider, child) {
+                if (orderProvider.orders.isEmpty) {
+                  return const Center(
+                    child: Text('No items in your cart.'),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: orderProvider.orders.length,
+                  itemBuilder: (context, index) {
+                    Order order = orderProvider.orders[index];
+                    return OrderItemWidget(order: order);
                   },
                 );
-              } else {
-                return Container();
-              }
-            },
+              },
+            ),
           ),
         ],
       ),
-      body: Consumer<OrderProvider>(
+      floatingActionButton: Consumer<OrderProvider>(
         builder: (context, orderProvider, child) {
-          if (orderProvider.orders.isEmpty) {
-            return Center(
-              child: Text('No orders yet'),
+          if (orderProvider.orders.isNotEmpty) {
+            return FloatingActionButton.extended(
+              onPressed: () async {
+                final authController = Provider.of<AuthController>(context, listen: false);
+
+                String? customerIdForQr = authController.currentUser?.uid; // ID pelanggan yang login
+                if (customerIdForQr == null) {
+                  customerIdForQr = 'guest_user'; // Atau ID guest yang lebih unik jika tidak login
+                }
+
+                // Periksa stok sebelum membuat QR Code
+                // Iterasi orders di keranjang
+                for (var orderInCart in orderProvider.orders) {
+                  // Panggil updateOrderQuantity untuk memicu cek stok
+                  // Jika ada item yang stoknya kurang, updateOrderQuantity akan menampilkan SnackBar
+                  // dan tidak mengubah orderProvider.orders (karena tidak cukup stok)
+                  // Jadi kita cek lagi quantity-nya setelah dipanggil
+                  int originalQuantity = orderInCart.quantity;
+                  await orderProvider.updateOrderQuantity(context, orderInCart, originalQuantity); // Memastikan stok valid
+
+                  // Jika quantity di keranjang berubah (berarti stok tidak cukup),
+                  // kita bisa berikan feedback dan hentikan proses.
+                  if (orderProvider.getOrderQuantity(orderInCart.name) < originalQuantity) {
+                    // SnackBar sudah muncul dari OrderProvider.updateOrderQuantity
+                    return; // Hentikan proses Generate QR jika ada item yang stoknya tidak cukup
+                  }
+                }
+
+
+                final List<Order> ordersForQr = orderProvider.orders.map((order) {
+                  return order.copyWith(customerId: customerIdForQr); // Tambahkan customerId ke setiap order
+                }).toList();
+
+                orderProvider.clearCart();
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => QrCodePage(orders: ordersForQr), // Teruskan order dengan customerId
+                  ),
+                );
+              },
+              backgroundColor: const Color.fromRGBO(195, 90, 45, 1),
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.qr_code),
+              label: const Text('Generate QR Code'),
             );
+          } else {
+            return Container();
           }
-          return ListView.builder(
-            itemCount: orderProvider.orders.length,
-            itemBuilder: (context, index) {
-              Order order = orderProvider.orders[index];
-              return OrderItemWidget(order: order);
-            },
-          );
         },
       ),
     );
@@ -56,47 +121,47 @@ class OrderPage extends StatelessWidget {
 class OrderItemWidget extends StatelessWidget {
   final Order order;
 
-  OrderItemWidget({required this.order});
+  const OrderItemWidget({Key? key, required this.order}) : super(key: key);
 
   void _incrementQuantity(BuildContext context) {
+    // Mempassing context ke updateOrderQuantity
     Provider.of<OrderProvider>(context, listen: false)
-        .updateOrderQuantity(order, order.quantity + 1);
+        .updateOrderQuantity(context, order, order.quantity + 1);
   }
 
   void _decrementQuantity(BuildContext context) {
-    if (order.quantity > 1) {
-      Provider.of<OrderProvider>(context, listen: false)
-          .updateOrderQuantity(order, order.quantity - 1);
-    } else {
-      Provider.of<OrderProvider>(context, listen: false).removeOrder(order);
-    }
+    // Mempassing context ke updateOrderQuantity
+    Provider.of<OrderProvider>(context, listen: false).updateOrderQuantity(context, order, order.quantity - 1);
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(10),
+      margin: const EdgeInsets.all(10),
       child: Padding(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         child: Row(
           children: [
-            // Uncomment this line if you have images in your assets
-            // Image.asset(
-            //   order.imagePath,
-            //   height: 50,
-            //   width: 50,
-            //   fit: BoxFit.cover,
-            // ),
-            SizedBox(width: 10),
+            order.imagePath != null && order.imagePath!.isNotEmpty
+                ? Image.asset(
+                    'images/${order.imagePath!}',
+                    height: 50,
+                    width: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, size: 50),
+                  )
+                : const Icon(Icons.image, size: 50),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     order.name,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     'Rp ${(order.price * order.quantity).toStringAsFixed(0)}',
                     style: TextStyle(color: Colors.grey[700]),
@@ -107,12 +172,12 @@ class OrderItemWidget extends StatelessWidget {
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove),
+                  icon: const Icon(Icons.remove),
                   onPressed: () => _decrementQuantity(context),
                 ),
                 Text(order.quantity.toString()),
                 IconButton(
-                  icon: Icon(Icons.add),
+                  icon: const Icon(Icons.add),
                   onPressed: () => _incrementQuantity(context),
                 ),
               ],

@@ -24,8 +24,7 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
     }
   }
 
-  // Modifikasi updateCart untuk passing context
-  void updateCart(BuildContext context, Katalog item, int quantity) { // TAMBAHKAN BuildContext context di sini
+  void updateCart(BuildContext context, Katalog item, int quantity) {
     if (mounted) {
       try {
         final orderProvider = Provider.of<OrderProvider>(context, listen: false);
@@ -35,8 +34,7 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
           quantity: quantity,
           imagePath: item.imagePath,
         );
-        // Panggil updateOrderQuantity dengan context
-        orderProvider.updateOrderQuantity(context, order, quantity); // PASS context ke OrderProvider
+        orderProvider.updateOrderQuantity(context, order, quantity);
       } catch (e) {
         print('Error updating cart: $e');
       }
@@ -92,7 +90,7 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
             ),
             const SizedBox(height: 10),
             Container(
-              height: 350, // Pastikan tinggi ini cukup untuk item Anda
+              height: 350,
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
@@ -108,8 +106,7 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
                     key: ValueKey(menuController.menuItems[index].namaMakanan),
                     item: menuController.menuItems[index],
                     formatCurrency: formatCurrency,
-                    // Sesuaikan updateCart di sini untuk passing context
-                    updateCart: (Katalog item, int quantity) => updateCart(context, item, quantity), // PASS context
+                    updateCart: (Katalog item, int quantity) => updateCart(context, item, quantity),
                   );
                 },
               ),
@@ -121,8 +118,7 @@ class _MenuHomeWidgetState extends State<MenuHomeWidget> {
   }
 }
 
-// MenuHomeItemWidget tetap sama
-class MenuHomeItemWidget extends StatefulWidget {
+class MenuHomeItemWidget extends StatefulWidget { // ATAU MenuHomeItemWidget untuk MenuHomeWidget
   final Katalog item;
   final String Function(double) formatCurrency;
   final void Function(Katalog, int) updateCart;
@@ -135,18 +131,19 @@ class MenuHomeItemWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _MenuHomeItemWidgetState createState() => _MenuHomeItemWidgetState();
+  _MenuHomeItemWidgetState createState() => _MenuHomeItemWidgetState(); // ATAU _MenuHomeItemWidgetState
 }
 
-class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
-  // `quantity` sekarang akan langsung mencerminkan nilai dari OrderProvider
-  // tidak perlu `initState` atau `didChangeDependencies` untuk inisialisasi awal.
-
+class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> { // ATAU _MenuHomeItemWidgetState
   @override
   Widget build(BuildContext context) {
-    // DENGAR PERUBAHAN ORDERPROVIDER LANGSUNG DI BUILD METHOD
     final currentQuantity = Provider.of<OrderProvider>(context, listen: true)
         .getOrderQuantity(widget.item.namaMakanan);
+
+    // Tentukan apakah tombol tambah harus dinonaktifkan
+    final bool isStockZero = widget.item.stock <= 0;
+    // Tentukan apakah tombol tambah harus dinonaktifkan karena kuantitas di keranjang sudah sama dengan stok
+    final bool isMaxStockReached = currentQuantity >= widget.item.stock;
 
     return Container(
       decoration: BoxDecoration(
@@ -211,12 +208,20 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          // Harga yang ditampilkan harus harga per item, bukan total
-                          // atau total jika quantity > 0
                           widget.formatCurrency(widget.item.harga),
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey[700],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        // Tampilkan stok
+                        Text(
+                          isStockZero ? "Stok Habis" : "Stok: ${widget.item.stock}",
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isStockZero ? Colors.red : Colors.green,
+                            fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -230,7 +235,7 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                       children: [
                         InkWell(
                           onTap: () {
-                            if (currentQuantity > 0) { // Gunakan currentQuantity
+                            if (currentQuantity > 0) {
                               widget.updateCart(widget.item, currentQuantity - 1);
                             }
                           },
@@ -249,26 +254,31 @@ class _MenuHomeItemWidgetState extends State<MenuHomeItemWidget> {
                           ),
                         ),
                         Text(
-                          currentQuantity.toString(), // Tampilkan currentQuantity
+                          currentQuantity.toString(),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         InkWell(
-                          onTap: () {
-                            widget.updateCart(widget.item, currentQuantity + 1); // Gunakan currentQuantity
-                          },
+                          // Nonaktifkan tombol tambah jika stok 0 atau kuantitas di keranjang sudah sama dengan stok
+                          onTap: isStockZero || isMaxStockReached
+                              ? null // Jika kondisi true, onTap jadi null (dinonaktifkan)
+                              : () {
+                                  widget.updateCart(widget.item, currentQuantity + 1);
+                                },
                           child: Container(
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFC35A2E),
+                              color: isStockZero || isMaxStockReached
+                                  ? Colors.grey // Warna abu-abu jika dinonaktifkan
+                                  : const Color(0xFFC35A2E),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.add,
-                              color: Colors.white,
+                              color: isStockZero || isMaxStockReached ? Colors.grey[300] : Colors.white,
                               size: 16,
                             ),
                           ),
