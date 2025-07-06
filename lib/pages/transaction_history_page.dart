@@ -107,15 +107,19 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        // UBAH FORMAT TANGGAL DI SINI
-                        "Date: ${DateFormat('dd MMM yyyy hh:mm a').format(transactionsInOrder[0].tanggalOrder)}",
+                        "Date: ${DateFormat('dd MMMM HH:mm a').format(transactionsInOrder[0].tanggalOrder)}",
                         style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                       ),
-                      if (_userRole != 'customer')
+                      if (_userRole != 'customer') // Ini tetap untuk Customer ID jika memang hanya untuk non-customer
                         Text(
                           "Customer ID: ${transactionsInOrder[0].idCustomer}",
                           style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                         ),
+                      // NAMA KASIR DITAMPILKAN UNTUK SEMUA ROLE
+                      Text(
+                        "Cashier: ${transactionsInOrder[0].namaCashier}",
+                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                      ),
                       const Divider(),
                       ...transactionsInOrder.map((transaksi) {
                         return Padding(

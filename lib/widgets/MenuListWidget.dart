@@ -48,16 +48,18 @@ class _MenuListWidgetState extends State<MenuListWidget> {
   Widget build(BuildContext context) {
     return Consumer<app_controller.MenuController>(
       builder: (context, menuController, child) {
-        if (menuController.menuItems.isEmpty) {
+        // PERUBAHAN UTAMA DI SINI: Gunakan filteredMenuItems
+        List<Katalog> displayedItems = menuController.filteredMenuItems;
+
+        if (displayedItems.isEmpty) { // Cek jika filteredItems kosong
           return const SizedBox(
             height: 200,
             child: Center(child: Text("No menu items available.")),
           );
         }
 
-        List<Katalog> displayedItems = menuController.menuItems;
-        if (widget.limit > 0 && menuController.menuItems.length > widget.limit) {
-          displayedItems = menuController.menuItems.take(widget.limit).toList();
+        if (widget.limit > 0 && displayedItems.length > widget.limit) {
+          displayedItems = displayedItems.take(widget.limit).toList();
         }
 
         if (widget.limit > 0) {
@@ -112,6 +114,7 @@ class _MenuListWidgetState extends State<MenuListWidget> {
   }
 }
 
+// MenuItemWidget tetap sama seperti yang sudah saya berikan sebelumnya
 class MenuItemWidget extends StatefulWidget {
   final Katalog item;
   final String Function(double) formatCurrency;
@@ -134,10 +137,8 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
     final currentQuantity = Provider.of<OrderProvider>(context, listen: true)
         .getOrderQuantity(widget.item.namaMakanan);
 
-    // Hitung stok yang ditampilkan (stok asli - kuantitas di keranjang)
     final int displayedStock = widget.item.stock - currentQuantity;
 
-    // Tentukan apakah tombol tambah harus dinonaktifkan
     final bool isDisplayedStockZero = displayedStock <= 0;
 
     return Container(
@@ -210,7 +211,6 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        // Tampilkan stok yang sudah dikurangi jumlah di keranjang
                         Text(
                           isDisplayedStockZero ? "Stok Habis" : "Stok: $displayedStock",
                           style: TextStyle(
@@ -256,9 +256,8 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                           ),
                         ),
                         InkWell(
-                          // Nonaktifkan tombol tambah jika stok yang ditampilkan 0
                           onTap: isDisplayedStockZero
-                              ? null // Jika kondisi true, onTap jadi null (dinonaktifkan)
+                              ? null
                               : () {
                                   widget.updateCart(widget.item, currentQuantity + 1);
                                 },
@@ -267,7 +266,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                             height: 28,
                             decoration: BoxDecoration(
                               color: isDisplayedStockZero
-                                  ? Colors.grey // Warna abu-abu jika dinonaktifkan
+                                  ? Colors.grey
                                   : const Color(0xFFC35A2E),
                               borderRadius: BorderRadius.circular(6),
                             ),

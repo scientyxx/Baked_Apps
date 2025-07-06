@@ -1,69 +1,22 @@
-// Tambahkan import yang dibutuhkan untuk semua halaman di routes
-import 'package:baked/pages/AdminMenuPage.dart'; // Tambahkan
-import 'package:baked/pages/ContinuePage.dart'; // Tambahkan
-import 'package:baked/pages/CoverPage.dart'; // Tambahkan
-import 'package:baked/pages/EditProfilePage.dart'; // Tambahkan
-import 'package:baked/pages/LoginPage.dart'; // Tambahkan
-import 'package:baked/pages/MenuManagementPage.dart'; // Tambahkan
-import 'package:baked/pages/MenuPage.dart';
-import 'package:baked/pages/OrderPage.dart';
-import 'package:baked/pages/ProfilePage.dart';
-import 'package:baked/pages/Register2Page.dart'; // Tambahkan
-import 'package:baked/pages/RegisterPage.dart'; // Tambahkan
-import 'package:baked/pages/ShiftManagementPage.dart'; // Tambahkan
-import 'package:baked/pages/StartingPage.dart'; // Tambahkan
-import 'package:baked/pages/cashier_scan_page.dart';
-import 'package:baked/pages/transaction_history_page.dart';
-import 'package:baked/providers/order_provider.dart';
+// lib/pages/HomePage.dart
+// Hapus semua import yang sudah tidak relevan di sini jika MyApp sudah dipindah
+// Hanya sisakan import yang memang dibutuhkan oleh HomePage dan HomePageContent
+import 'package:baked/controllers/menu_controller.dart' as app_menu_controller; // Pastikan import ini ada
+import 'package:baked/pages/MenuPage.dart'; // Untuk MenuPageContent
+import 'package:baked/pages/OrderPage.dart'; // Untuk OrderPage
+import 'package:baked/pages/ProfilePage.dart'; // Untuk ProfilePageContent
 import 'package:baked/widgets/MenuListWidget.dart';
 import 'package:baked/widgets/PopularItemsWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() {
-  // main() ini ada di HomePage.dart, tapi harusnya dihapus atau dipindah ke main.dart utama
-  // Jika ini masih ada di HomePage.dart, ini adalah duplikasi.
-  // MyApp() ini akan digunakan di main.dart utama.
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => OrderProvider(),
-      child: MyApp(),
-    ),
-  );
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false, // Tambahkan ini
-      title: 'Your App',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        textTheme: const TextTheme(), // Tambahkan const
-      ),
-      home: CoverPage(), // <--- Tetapkan CoverPage sebagai home awal
-      routes: { // <--- PINDAHKAN BLOK ROUTES KE SINI
-        "homepage": (context) => HomePage(), // Ini HomePage yang didefinisikan di bawah
-        "startingpage": (context) => StartingPage(),
-        "continuepage": (context) => ContinuePage(),
-        "loginpage": (context) => LoginPage(), // Ganti login.LoginPage()
-        "registerpage": (context) => RegisterPage(),
-        "register2page": (context) => Register2Page(),
-        "editprofilepage": (context) => EditProfilePageContent(),
-        "profilepage": (context) => ProfilePageContent(),
-        "admin_menu_page": (context) => AdminMenuPage(),
-        "menu_management_page": (context) => MenuManagementPage(),
-        "shift_management_page": (context) => ShiftManagementPage(),
-        "cashier_scan_page": (context) => const CashierScanPage(),
-         "transaction_history_page": (context) => const TransactionHistoryPage(),
-      },
-      debugShowMaterialGrid: false, // Tambahkan ini
-    );
-  }
-}
+// HAPUS SECARA TOTAL void main() dan class MyApp DARI SINI
+// void main() { ... }
+// class MyApp extends StatelessWidget { ... }
 
 class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key); // Tambahkan const constructor
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -73,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _tabs = [
-    HomePageContent(),
+    HomePageContent(), // Ini adalah StatefulWidget, OK
     MenuPageContent(),
     OrderPage(),
     ProfilePageContent(),
@@ -135,10 +88,46 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ... (sisa HomePageContent tetap sama)
-class HomePageContent extends StatelessWidget {
+// UBAH DARI StatelessWidget MENJADI StatefulWidget
+class HomePageContent extends StatefulWidget {
+  const HomePageContent({Key? key}) : super(key: key); // Tambahkan const constructor
+
+  @override
+  _HomePageContentState createState() => _HomePageContentState();
+}
+
+class _HomePageContentState extends State<HomePageContent> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Inisialisasi search query di MenuController saat HomePageContent pertama kali dimuat
+    // Memastikan daftar item filter terisi semua di awal
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Pastikan MenuController sudah tersedia di tree
+      Provider.of<app_menu_controller.MenuController>(context, listen: false).setSearchQuery('');
+    });
+
+    // Tambahkan listener untuk input pencarian
+    _searchController.addListener(() {
+      // Pastikan MenuController sudah tersedia di tree
+      Provider.of<app_menu_controller.MenuController>(context, listen: false).setSearchQuery(_searchController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Dapatkan instance MenuController untuk memanggil setSearchQuery
+    // Tidak perlu listen: false jika Anda hanya memanggil metode
+    final menuController = Provider.of<app_menu_controller.MenuController>(context, listen: false);
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -185,20 +174,22 @@ class HomePageContent extends StatelessWidget {
               color: const Color.fromARGB(255, 237, 233, 233),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.search),
+                const Icon(Icons.search),
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(left: 10),
+                    padding: const EdgeInsets.only(left: 10),
                     child: TextField(
-                      decoration: InputDecoration(
+                      controller: _searchController,
+                      decoration: const InputDecoration(
                         hintText: "Search here...",
                         border: InputBorder.none,
                       ),
                     ),
                   ),
                 ),
+                // const Icon(Icons.filter_list),
               ],
             ),
           ),
@@ -213,7 +204,7 @@ class HomePageContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PopularItemsWidget(),
+                PopularItemsWidget(), // Ini akan menggunakan filteredMenuItems
                 Padding(
                   padding:
                       const EdgeInsets.only(right: 10, bottom: 10, top: 50, left: 20),
@@ -231,7 +222,7 @@ class HomePageContent extends StatelessWidget {
                         onPressed: () {
                           final homePageState = context.findAncestorStateOfType<State<HomePage>>();
                           homePageState?.setState(() {
-                            (homePageState as _HomePageState).onTabTapped(1);
+                            (homePageState as _HomePageState).onTabTapped(1); // Navigasi ke tab Menu
                           });
                         },
                         child: const Text(
@@ -245,7 +236,7 @@ class HomePageContent extends StatelessWidget {
                     ],
                   ),
                 ),
-                MenuListWidget(limit: 4)
+                MenuListWidget(limit: 4) // Ini akan menggunakan filteredMenuItems
               ],
             ),
           ),
