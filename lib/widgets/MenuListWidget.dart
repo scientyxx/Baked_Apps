@@ -134,11 +134,11 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
     final currentQuantity = Provider.of<OrderProvider>(context, listen: true)
         .getOrderQuantity(widget.item.namaMakanan);
 
-    // Tentukan apakah tombol tambah harus dinonaktifkan
-    final bool isStockZero = widget.item.stock <= 0;
-    // Tentukan apakah tombol tambah harus dinonaktifkan karena kuantitas di keranjang sudah sama dengan stok
-    final bool isMaxStockReached = currentQuantity >= widget.item.stock;
+    // Hitung stok yang ditampilkan (stok asli - kuantitas di keranjang)
+    final int displayedStock = widget.item.stock - currentQuantity;
 
+    // Tentukan apakah tombol tambah harus dinonaktifkan
+    final bool isDisplayedStockZero = displayedStock <= 0;
 
     return Container(
       decoration: BoxDecoration(
@@ -210,12 +210,12 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        // Tampilkan stok jika diperlukan
+                        // Tampilkan stok yang sudah dikurangi jumlah di keranjang
                         Text(
-                          isStockZero ? "Stok Habis" : "Stok: ${widget.item.stock}",
+                          isDisplayedStockZero ? "Stok Habis" : "Stok: $displayedStock",
                           style: TextStyle(
                             fontSize: 10,
-                            color: isStockZero ? Colors.red : Colors.green,
+                            color: isDisplayedStockZero ? Colors.red : Colors.green,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
@@ -230,7 +230,6 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                       children: [
                         InkWell(
                           onTap: () {
-                            // Selalu bisa mengurangi jika quantity > 0
                             if (currentQuantity > 0) {
                               widget.updateCart(widget.item, currentQuantity - 1);
                             }
@@ -257,8 +256,8 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                           ),
                         ),
                         InkWell(
-                          // Nonaktifkan tombol tambah jika stok 0 atau kuantitas di keranjang sama dengan stok
-                          onTap: isStockZero || isMaxStockReached
+                          // Nonaktifkan tombol tambah jika stok yang ditampilkan 0
+                          onTap: isDisplayedStockZero
                               ? null // Jika kondisi true, onTap jadi null (dinonaktifkan)
                               : () {
                                   widget.updateCart(widget.item, currentQuantity + 1);
@@ -267,14 +266,14 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                              color: isStockZero || isMaxStockReached
+                              color: isDisplayedStockZero
                                   ? Colors.grey // Warna abu-abu jika dinonaktifkan
                                   : const Color(0xFFC35A2E),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Icon(
                               Icons.add,
-                              color: isStockZero || isMaxStockReached ? Colors.grey[300] : Colors.white, // Warna ikon
+                              color: isDisplayedStockZero ? Colors.grey[300] : Colors.white,
                               size: 16,
                             ),
                           ),

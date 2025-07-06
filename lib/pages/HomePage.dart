@@ -199,7 +199,6 @@ class HomePageContent extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(Icons.filter_list),
               ],
             ),
           ),
