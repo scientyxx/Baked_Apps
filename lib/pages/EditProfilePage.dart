@@ -1,4 +1,4 @@
-import 'package:baked/controllers/user_controller.dart'; // Import UserController
+import 'package:baked/controllers/user_controller.dart';
 import 'package:flutter/material.dart';
 
 class EditProfilePageContent extends StatefulWidget {
@@ -10,7 +10,7 @@ class _EditProfilePageContentState extends State<EditProfilePageContent> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController nameController = TextEditingController();
   TextEditingController addressController = TextEditingController();
-  final UserController _userController = UserController(); // Inisialisasi UserController
+  final UserController _userController = UserController();
 
   @override
   void initState() {
@@ -20,14 +20,13 @@ class _EditProfilePageContentState extends State<EditProfilePageContent> {
 
   Future<void> _loadUserData() async {
     try {
-      Map<String, dynamic>? userData = await _userController.getUserData(); // Gunakan UserController
+      Map<String, dynamic>? userData = await _userController.getUserData();
       if (userData != null) {
         setState(() {
           nameController.text = userData['name'] ?? '';
           addressController.text = userData['address'] ?? '';
         });
       } else {
-        // Handle case when document does not exist or user not logged in
         setState(() {
           nameController.text = '';
           addressController.text = '';
@@ -44,11 +43,12 @@ class _EditProfilePageContentState extends State<EditProfilePageContent> {
         await _userController.updateUserData(
           nameController.text,
           addressController.text,
-        ); // Gunakan UserController
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Profile updated successfully!')),
         );
-        Navigator.pushReplacementNamed(context, "profilepage"); // Navigasi ke halaman profil
+        // GANTI pushReplacementNamed DENGAN pop
+        Navigator.of(context).pop(); // Ini akan kembali ke halaman sebelumnya (ProfilePage)
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update profile: $e')),
@@ -60,6 +60,11 @@ class _EditProfilePageContentState extends State<EditProfilePageContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar( // TAMBAHKAN APPBAR AGAR ADA TOMBOL BACK
+        title: const Text("Edit Profile"),
+        backgroundColor: const Color(0xFFC35A2E),
+        foregroundColor: Colors.white,
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -78,7 +83,7 @@ class _EditProfilePageContentState extends State<EditProfilePageContent> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(
-                    "Profile",
+                    "Profile", // Ini seharusnya "Edit Profile" atau dihapus karena sudah ada di AppBar
                     style: TextStyle(
                       fontSize: 35,
                       color: Colors.black,

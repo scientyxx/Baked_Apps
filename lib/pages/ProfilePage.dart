@@ -1,6 +1,6 @@
 import 'package:baked/controllers/auth_controller.dart';
 import 'package:baked/controllers/user_controller.dart';
-import 'package:baked/pages/transaction_history_page.dart'; // <--- TAMBAHKAN IMPORT INI
+import 'package:baked/pages/transaction_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,7 +10,7 @@ class ProfilePageContent extends StatefulWidget {
 }
 
 class _ProfilePageContentState extends State<ProfilePageContent> {
-  final UserController _userController = UserController(); // Inisialisasi UserController
+  final UserController _userController = UserController();
 
   TextEditingController nameController = TextEditingController();
   TextEditingController addressController = TextEditingController();
@@ -18,12 +18,10 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
   @override
   void initState() {
     super.initState();
-    // Panggil _loadUserData hanya jika ada pengguna yang login
     final authController = Provider.of<AuthController>(context, listen: false);
     if (authController.currentUser != null) {
       _loadUserData();
     } else {
-      // Jika tidak ada user login, set data default
       nameController.text = 'Please log in';
       addressController.text = 'Please log in';
     }
@@ -31,7 +29,6 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
 
   Future<void> _loadUserData() async {
     try {
-      // Asumsi: getUserData di UserController sudah bisa mengambil UID dari AuthController internalnya atau menerimanya sebagai parameter.
       Map<String, dynamic>? userData = await _userController.getUserData();
       if (userData != null) {
         setState(() {
@@ -55,8 +52,7 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
 
   @override
   Widget build(BuildContext context) {
-    // Dapatkan instance AuthController
-    final authController = Provider.of<AuthController>(context); // Listen to changes in auth state
+    final authController = Provider.of<AuthController>(context);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -88,9 +84,11 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(
-                            context, "editprofilepage");
+                      onPressed: () async { // UBAH MENJADI async
+                        // GANTI pushReplacementNamed DENGAN push
+                        await Navigator.pushNamed(context, "editprofilepage");
+                        // Setelah kembali dari EditProfilePage, muat ulang data profil
+                        _loadUserData();
                       },
                       child: const Text(
                         "Edit",
@@ -135,18 +133,16 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                 ),
                 readOnly: true,
               ),
-              const SizedBox(height: 20), // <--- Tambahkan sedikit spasi di sini
+              const SizedBox(height: 20),
 
-              // Tombol History Baru untuk Customer
               ElevatedButton.icon(
                 onPressed: () {
-                  // Hanya navigasi jika ada user yang login
                   if (authController.currentUser != null) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => TransactionHistoryPage(
-                          customerId: authController.currentUser!.uid, // <--- Kirim ID pelanggan
+                          customerId: authController.currentUser!.uid,
                         ),
                       ),
                     );
@@ -170,12 +166,12 @@ class _ProfilePageContentState extends State<ProfilePageContent> {
                 ),
               ),
 
-              const SizedBox(height: 20), // <--- Spasi antara tombol history dan logout
+              const SizedBox(height: 20),
 
-              // Tombol Logout
               ElevatedButton.icon(
                 onPressed: () async {
                   await authController.signOut();
+                  // Ini akan navigasi ke halaman login yang mungkin di luar Home/Dashboard
                   Navigator.pushReplacementNamed(context, "loginpage");
                 },
                 icon: const Icon(Icons.logout, color: Colors.white),
