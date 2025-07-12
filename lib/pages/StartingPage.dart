@@ -72,7 +72,8 @@ class StartingPage extends StatelessWidget {
               SizedBox(height: 20),
               InkWell(
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, "loginpage");
+                  // Navigator.pushReplacementNamed(context, "loginpage");
+                  Navigator.pushNamed(context, "loginpage");
                 },
                 child: Container(
                   width: MediaQuery.of(context).size.width * 0.8,
