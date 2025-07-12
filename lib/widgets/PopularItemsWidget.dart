@@ -180,7 +180,7 @@ class PopularItemsWidget extends StatelessWidget {
                               ),
                               // Tampilkan stok di sini juga
                               Text(
-                                isDisplayedStockZero ? "Stok Habis" : "Stok: $displayedStock",
+                                isDisplayedStockZero ? "Out of stock" : "Stock: $displayedStock",
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: isDisplayedStockZero ? Colors.red : Colors.white,

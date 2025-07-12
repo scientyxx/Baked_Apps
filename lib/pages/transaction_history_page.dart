@@ -69,7 +69,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
           if (filteredTransactions.isEmpty) {
             return const Center(
-              child: Text("No transactions recorded yet for this user."),
+              child: Text("No transactions recorded yet."),
             );
           }
 
