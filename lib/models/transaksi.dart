@@ -13,7 +13,7 @@ class Transaksi {
   final int jumlahItem;
   final double totalHargaItem;
   final String? idCashier;
-  final String? namaCashier; // <--- TAMBAHKAN INI
+  final String? namaCashier;
   final String? shift;
 
   Transaksi({
@@ -28,7 +28,7 @@ class Transaksi {
     required this.jumlahItem,
     required this.totalHargaItem,
     this.idCashier,
-    this.namaCashier, // <--- TAMBAHKAN INI
+    this.namaCashier,
     this.shift,
   });
 
@@ -44,7 +44,7 @@ class Transaksi {
     int? jumlahItem,
     double? totalHargaItem,
     String? idCashier,
-    String? namaCashier, // <--- TAMBAHKAN INI
+    String? namaCashier,
     String? shift,
   }) {
     return Transaksi(
@@ -59,7 +59,7 @@ class Transaksi {
       jumlahItem: jumlahItem ?? this.jumlahItem,
       totalHargaItem: totalHargaItem ?? this.totalHargaItem,
       idCashier: idCashier ?? this.idCashier,
-      namaCashier: namaCashier ?? this.namaCashier, // <--- TAMBAHKAN INI
+      namaCashier: namaCashier ?? this.namaCashier,
       shift: shift ?? this.shift,
     );
   }
@@ -76,7 +76,7 @@ class Transaksi {
       'jumlah_item': jumlahItem,
       'total_harga_item': totalHargaItem,
       'id_cashier': idCashier,
-      'nama_cashier': namaCashier, // <--- TAMBAHKAN INI
+      'nama_cashier': namaCashier,
       'shift': shift,
     };
   }
@@ -94,7 +94,7 @@ class Transaksi {
       jumlahItem: (json['jumlah_item'] as num).toInt(),
       totalHargaItem: (json['total_harga_item'] as num).toDouble(),
       idCashier: json['id_cashier'] as String?,
-      namaCashier: json['nama_cashier'] as String?, // <--- TAMBAHKAN INI
+      namaCashier: json['nama_cashier'] as String?,
       shift: json['shift'] as String?,
     );
   }

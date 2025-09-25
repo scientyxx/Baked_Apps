@@ -1,22 +1,15 @@
-import 'package:baked/controllers/auth_controller.dart'; // Import AuthController
-import 'package:baked/pages/HomePage copy.dart'; // Ini mungkin harusnya HomePage.dart
-import 'package:baked/pages/RegisterPage.dart';
+import 'package:baked/controllers/auth_controller.dart';
 import 'package:flutter/material.dart';
 
 class Register2Page extends StatelessWidget {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
-  final AuthController _authController = AuthController(); // Inisialisasi AuthController
+  final AuthController _authController = AuthController();
 
   @override
   Widget build(BuildContext context) {
-    // _obscureText seharusnya di StatefullWidget jika ingin di-toggle
-
     void registerAndSaveUserData(BuildContext context) async {
       try {
-        // Ambil email dan password dari RegisterPage (asumsi disimpan atau diteruskan)
-        // Untuk contoh ini, saya asumsikan email dan password didapatkan dari suatu tempat
-        // Misalnya, dari route arguments jika diteruskan dari RegisterPage
         final Map<String, String>? args = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
         final String? email = args?['email'];
         final String? password = args?['password'];
@@ -31,19 +24,40 @@ class Register2Page extends StatelessWidget {
           nameController.text,
           addressController.text,
         );
-        print("Data successfully saved to Firestore");
-        Navigator.pushReplacementNamed(context, "homepage");
+        print("Data successfully saved to Firestore and verification email sent.");
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Registrasi Berhasil!"),
+              content: Text("Email verifikasi telah dikirim ke $email. Mohon cek inbox Anda (juga folder spam/junk) untuk memverifikasi akun Anda sebelum login."),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text("OK"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.pushReplacementNamed(context, "loginpage");
+                  },
+                ),
+              ],
+            );
+          },
+        );
+        // ---------------------------------------------------------------------
+
       } catch (e) {
         print("Error: $e");
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text("Error"),
-              content: Text(e.toString()), // Menampilkan pesan kesalahan dari controller
+              title: const Text("Error Registrasi"),
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
               actions: <Widget>[
                 TextButton(
-                  child: Text("OK"),
+                  child: const Text("OK"),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -58,7 +72,7 @@ class Register2Page extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pushNamed(context, "registerpage");
           },
@@ -74,8 +88,8 @@ class Register2Page extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               "Register",
               textAlign: TextAlign.left,
               style: TextStyle(
@@ -84,10 +98,10 @@ class Register2Page extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             TextFormField(
               controller: nameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Name',
                 labelStyle: TextStyle(color: Colors.black),
                 border: OutlineInputBorder(),
@@ -97,10 +111,10 @@ class Register2Page extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextFormField(
               controller: addressController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Address',
                 labelStyle: TextStyle(color: Colors.black),
                 border: OutlineInputBorder(),
@@ -110,7 +124,7 @@ class Register2Page extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 50),
+            const SizedBox(height: 50),
             InkWell(
               onTap: () {
                 registerAndSaveUserData(context);
@@ -119,10 +133,10 @@ class Register2Page extends StatelessWidget {
                 width: MediaQuery.of(context).size.width * 1.0,
                 height: MediaQuery.of(context).size.height * 0.07,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  color: Color.fromRGBO(195, 90, 45, 10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  color: const Color.fromRGBO(195, 90, 45, 10),
                   border: Border.all(
-                      color: Color.fromRGBO(195, 90, 45, 10), width: 2),
+                      color: const Color.fromRGBO(195, 90, 45, 10), width: 2),
                 ),
                 child: Center(
                   child: Text(
@@ -142,5 +156,3 @@ class Register2Page extends StatelessWidget {
     );
   }
 }
-
-// Main di Register2Page dihapus karena sudah ada di main.dart

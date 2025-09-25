@@ -2,11 +2,11 @@
 
 
 class Pembayaran {
-  final String? id; // Ubah ke String?
-  final String idOrder; // Tambahkan idOrder untuk menghubungkan ke Transaksi
-  final DateTime tanggalPembayaran; // Ubah nama field agar lebih spesifik
+  final String? id;
+  final String idOrder;
+  final DateTime tanggalPembayaran;
   final String metodeBayar;
-  final double totalPembayaran; // Tambahkan total pembayaran
+  final double totalPembayaran;
 
   Pembayaran({
     this.id,
@@ -37,7 +37,7 @@ class Pembayaran {
   Map<String, dynamic> toJson() {
     return {
       'id_order': idOrder,
-      'tanggal_pembayaran': tanggalPembayaran.toIso8601String(), // Simpan sebagai string ISO 8601
+      'tanggal_pembayaran': tanggalPembayaran.toIso8601String(),
       'metode_bayar': metodeBayar,
       'total_pembayaran': totalPembayaran,
     };
@@ -50,7 +50,7 @@ class Pembayaran {
       idOrder: json['id_order'] as String,
       tanggalPembayaran: DateTime.parse(json['tanggal_pembayaran'] as String),
       metodeBayar: json['metode_bayar'] as String,
-      totalPembayaran: (json['total_pembayaran'] as num).toDouble(), // Pastikan double
+      totalPembayaran: (json['total_pembayaran'] as num).toDouble(),
     );
   }
 }

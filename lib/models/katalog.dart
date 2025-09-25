@@ -6,7 +6,7 @@ class Katalog {
   final double harga;
   final DateTime tanggalKadaluarsa;
   final int stock;
-  final String? imagePath; // Tambahkan ini
+  final String? imagePath;
 
   Katalog({
     this.id,
@@ -16,7 +16,7 @@ class Katalog {
     required this.harga,
     required this.tanggalKadaluarsa,
     required this.stock,
-    this.imagePath, // Inisialisasi di constructor
+    this.imagePath,
   });
 
   Katalog copyWith({
@@ -27,7 +27,7 @@ class Katalog {
     double? harga,
     DateTime? tanggalKadaluarsa,
     int? stock,
-    String? imagePath, // Tambahkan di copyWith
+    String? imagePath,
   }) {
     return Katalog(
       id: id ?? this.id,
@@ -49,7 +49,6 @@ class Katalog {
       'harga': harga,
       'tanggal_kadaluarsa': tanggalKadaluarsa.toIso8601String(),
       'stock': stock,
-      // 'image_path' akan ditambahkan di controller saat upload
     };
   }
 
@@ -62,7 +61,7 @@ class Katalog {
       harga: json['harga'].toDouble(),
       tanggalKadaluarsa: DateTime.parse(json['tanggal_kadaluarsa']),
       stock: json['stock'],
-      imagePath: json['image_path'], // Ambil image_path dari JSON
+      imagePath: json['image_path'],
     );
   }
 }

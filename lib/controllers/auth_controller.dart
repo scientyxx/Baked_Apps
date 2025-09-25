@@ -18,6 +18,10 @@ class AuthController with ChangeNotifier {
       );
 
       if (userCredential.user != null) {
+        // --- Tambahkan baris ini untuk mengirim email verifikasi ---
+        await userCredential.user!.sendEmailVerification();
+        // --------------------------------------------------------
+
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'email': email,
           'name': name,
@@ -31,15 +35,17 @@ class AuthController with ChangeNotifier {
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       if (e.code == 'weak-password') {
-        errorMessage = 'The password provided is too weak.';
+        errorMessage = 'Kata sandi terlalu lemah. Mohon gunakan kombinasi huruf, angka, dan simbol.';
       } else if (e.code == 'email-already-in-use') {
-        errorMessage = 'The account already exists for that email.';
+        errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Format email tidak valid. Mohon periksa kembali alamat email Anda.';
       } else {
-        errorMessage = 'Registration failed: ${e.message}';
+        errorMessage = 'Pendaftaran gagal: ${e.message}. Silakan coba lagi.';
       }
-      throw Exception(errorMessage);
+      throw Exception(errorMessage); // Lempar Exception dengan pesan yang jelas
     } catch (e) {
-      throw Exception('An unknown error occurred during registration: $e');
+      throw Exception('Terjadi kesalahan tidak dikenal saat pendaftaran. Pesan: ${e.toString()}');
     }
   }
 
@@ -58,22 +64,26 @@ class AuthController with ChangeNotifier {
           return userDoc.data() as Map<String, dynamic>;
         } else {
           await _auth.signOut();
-          throw Exception('User data not found in database. Please contact support.');
+          throw Exception('Data pengguna tidak ditemukan di database. Mohon hubungi dukungan.');
         }
       }
       return null;
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       if (e.code == 'user-not-found') {
-        errorMessage = 'No user found for that email.';
+        errorMessage = 'Akun tidak ditemukan untuk email ini. Mohon periksa kembali email Anda.';
       } else if (e.code == 'wrong-password') {
-        errorMessage = 'Wrong password provided for that user.';
+        errorMessage = 'Kata sandi salah. Mohon periksa kembali kata sandi Anda.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Format email tidak valid. Mohon periksa kembali alamat email Anda.';
+      } else if (e.code == 'user-disabled') {
+        errorMessage = 'Akun ini telah dinonaktifkan. Mohon hubungi dukungan.';
       } else {
-        errorMessage = 'Login failed: ${e.message}';
+        errorMessage = 'Login gagal: ${e.message}. Silakan coba lagi.';
       }
-      throw Exception(errorMessage);
+      throw Exception(errorMessage); // Lempar Exception dengan pesan yang jelas
     } catch (e) {
-      throw Exception('An unknown error occurred during login: $e');
+      throw Exception('Terjadi kesalahan tidak dikenal saat login. Pesan: ${e.toString()}');
     }
   }
 
@@ -101,7 +111,7 @@ class AuthController with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print("Error updating shift for user $uid: $e");
-      throw Exception('Failed to update user shift: $e');
+      throw Exception('Gagal mengupdate shift pengguna: ${e.toString()}');
     }
   }
 
@@ -140,7 +150,6 @@ class AuthController with ChangeNotifier {
       });
     } catch (e) {
       print("Error getting next order sequence: $e");
-      // Fallback: Jika gagal, gunakan timestamp, tapi ini tidak ideal untuk sequential
       return DateTime.now().millisecondsSinceEpoch % 10000;
     }
   }

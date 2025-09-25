@@ -1,9 +1,9 @@
 class Kasir {
-  final String? id; // Ubah ke String?
+  final String? id;
   final String nama;
   final String email;
   final String password;
-  final String? shiftType; // Sudah ada
+  final String? shiftType;
 
   Kasir({
     this.id,
@@ -16,9 +16,9 @@ class Kasir {
   // ... copyWith ...
   // ... toJson ...
 
-  factory Kasir.fromJson(Map<String, dynamic> json, String id) { // <-- TAMBAHKAN 'String id' DI SINI
+  factory Kasir.fromJson(Map<String, dynamic> json, String id) {
     return Kasir(
-      id: id, // <-- GUNAKAN PARAMETER 'id' DARI LUAR
+      id: id,
       nama: json['nama'],
       email: json['email'],
       password: json['password'],

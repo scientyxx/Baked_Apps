@@ -26,18 +26,26 @@ class _LoginPageState extends State<LoginPage> {
       _errorMessage = '';
     });
     try {
-      Map<String, dynamic>? userData = await _authController.loginUser( // Tangkap userData
+      Map<String, dynamic>? userData = await _authController.loginUser(
         emailController.text.trim(),
         passwordController.text.trim(),
       );
 
       if (userData != null) {
-        String? userRole = userData['role']; // Ambil role dari data
+        User? user = FirebaseAuth.instance.currentUser;
+        if (user != null && !user.emailVerified) {
+          await _authController.signOut();
+          setState(() {
+            _errorMessage = 'Email Anda belum diverifikasi. Mohon cek inbox Anda (termasuk folder spam/junk) untuk memverifikasi akun.';
+          });
+          return;
+        }
+        // ---------------------------------------------
+
+        String? userRole = userData['role'];
         if (userRole == 'kasir' || userRole == 'admin') {
-          // Arahkan ke halaman admin/kasir
-          Navigator.pushReplacementNamed(context, "admin_menu_page"); // Rute baru
+          Navigator.pushReplacementNamed(context, "admin_menu_page");
         } else {
-          // Default ke halaman customer
           Navigator.pushReplacementNamed(context, "homepage");
         }
       } else {
@@ -45,6 +53,11 @@ class _LoginPageState extends State<LoginPage> {
           _errorMessage = 'Login failed: User data not found.';
         });
       }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message ?? 'Login failed.';
+      });
+      print('Error: $e');
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');

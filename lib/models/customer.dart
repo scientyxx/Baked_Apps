@@ -1,5 +1,5 @@
 class Customer {
-  final String? id; // Ubah ke String?
+  final String? id;
   final String email;
   final String password;
 
@@ -12,9 +12,9 @@ class Customer {
   // ... copyWith ...
   // ... toJson ...
 
-  factory Customer.fromJson(Map<String, dynamic> json, String id) { // <-- TAMBAHKAN 'String id' DI SINI
+  factory Customer.fromJson(Map<String, dynamic> json, String id) {
     return Customer(
-      id: id, // <-- GUNAKAN PARAMETER 'id' DARI LUAR
+      id: id,
       email: json['email'],
       password: json['password'],
     );
